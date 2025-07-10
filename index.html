@@ -761,12 +761,12 @@
 
 
     <!-- Firebase SDK -->
-    <script type="module">
-        // Using Firebase compat libraries for this implementation
-        import * as firebase from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js";
-        import "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js";
-        import "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js";
+    <!-- FIXED: Load Firebase using standard script tags instead of ES modules -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
+    <script>
         // --- Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyCNjGhWVguIWBAHyyLfTapsF_5Bp6ztRG0", // Keep your actual API key secure
@@ -1645,6 +1645,7 @@
 
             try {
                 // Initialize Firebase with compat version
+                // FIXED: Check for existing apps before initializing
                 if (!firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
                 }
