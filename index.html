@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safeway OS - Garage Solutions</title>
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&family=Inter%3Awght%40400%3B500%3B700%3B900&family=Noto+Sans%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <style>
+        body {
+            font-family: 'Inter', "Noto Sans", sans-serif;
+            background-color: #f8fafc;
+        }
+        .nav-link.active {
+            color: #047857;
+            background-color: #d1fae5;
+        }
+        .stat-card-stitch {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.07);
+        }
+        .content-card-stitch {
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.07);
+        }
+        .btn-primary-stitch {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 0.375rem;
+            background-color: #059669;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+         .btn-primary-stitch:hover {
+            background-color: #047857;
+        }
+        .btn-primary-stitch:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .btn-secondary-stitch {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            border-radius: 0.375rem;
+            background-color: #f0fdf4;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            cursor: pointer;
+        }
+        .btn-approve-stitch {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-radius: 0.5rem;
+            background-color: #1e40af;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            transition: background-color 0.2s;
+        }
+        .btn-approve-stitch:hover {
+            background-color: #1d4ed8;
+        }
+        .btn-approve-stitch:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .custom-table th, .custom-table td {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+        }
+        .custom-table th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-weight: 600;
+        }
+        .custom-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+        .status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .status-needs-scheduling { background-color: #fef3c7; color: #b45309; }
+        .status-scheduled { background-color: #d1fae5; color: #065f46; } /* FIXED: Reverted to green */
+        .status-awaiting-completion { background-color: #dbeafe; color: #1e40af; } /* FIXED: Set to blue */
+        .status-completed { background-color: #dcfce7; color: #15803d; }
+        .status-online, .status-available { background-color: #d1fae5; color: #065f46; }
+        .status-offline { background-color: #e5e7eb; color: #4b5563; }
+        .status-lowstock { background-color: #fee2e2; color: #b91c1c; }
+        .status-instock { background-color: #dcfce7; color: #15803d; }
+        .status-ordered { background-color: #e0e7ff; color: #3730a3; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 650px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .close-button {
+            color: #94a3b8;
+            font-size: 1.75rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #334155;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+        .vm { vertical-align: middle; }
+
+        /* Styles for Daniel AI Chat UI */
+        .chat-container {
+            display: flex; 
+            flex-direction: column;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        .chat-log {
+            flex-grow: 1; 
+            overflow-y: auto;
+            padding: 1rem; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 0.75rem;
+        }
+        .chat-bubble {
+            padding: 0.75rem 1rem; 
+            border-radius: 0.75rem; 
+            max-width: 85%;
+            line-height: 1.6; 
+            font-size: 0.875rem;
+        }
+        .chat-bubble-user {
+            background-color: #059669; 
+            color: white; 
+            align-self: flex-end; 
+            border-bottom-right-radius: 0.25rem; 
+        }
+        .chat-bubble-ai {
+            background-color: #e2e8f0; 
+            color: #1e293b; 
+            align-self: flex-start; 
+            border-bottom-left-radius: 0.25rem; 
+        }
+        .chat-input-area {
+            display: flex; 
+            padding: 1rem; 
+            border-top: 1px solid #e2e8f0; 
+        }
+        #chatInput.chat-input {
+            flex-grow: 1;
+            border: 1px solid #cbd5e1; 
+            border-radius: 0.375rem; 
+            padding: 0.625rem 0.75rem; 
+            margin-right: 0.5rem; 
+        }
+        #sendChatButton.chat-send-btn {
+            background-color: #059669; 
+            color: white; 
+            border-radius: 0.375rem; 
+            padding: 0.625rem 1rem; 
+            font-weight: 500; 
+            cursor: pointer;
+        }
+        #sendChatButton.chat-send-btn:hover {
+            background-color: #047857; 
+        }
+        #sendChatButton:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .chat-bubble-ai.processing-bubble .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-top-color: #1e293b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Latest Jobs Animation */
+        .latest-job-item {
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition-delay: var(--animation-delay, 0s); /* Allow staggered animation */
+        }
+        .latest-job-item-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div id="layoutContainer" class="relative flex size-full min-h-screen flex-col bg-slate-50 group/design-root overflow-x-hidden">
+        <div class="flex h-full grow flex-col">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-10 py-4 shadow-sm sticky top-0 z-50">
+                <div class="flex items-center gap-3 text-slate-900">
+                    <div class="size-8 text-green-700">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor" fill-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-slate-900 text-xl font-bold leading-tight tracking-[-0.015em]">Safeway OS</h1>
+                </div>
+                <nav class="flex items-center gap-1 overflow-x-auto">
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="dashboard">
+                        <span class="material-icons-outlined text-xl">dashboard</span>Dashboard
+                    </a>
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="jobs">
+                        <span class="material-icons-outlined text-xl">build</span>Jobs
+                    </a>
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="technicians">
+                        <span class="material-icons-outlined text-xl">people</span>Technicians
+                    </a>
+                     <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="schedule">
+                        <span class="material-icons-outlined text-xl">calendar_today</span>Schedule
+                    </a>
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="inventory">
+                        <span class="material-icons-outlined text-xl">inventory_2</span>Inventory
+                    </a>
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="warranty">
+                        <span class="material-icons-outlined text-xl">verified_user</span>Warranty
+                    </a>
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors active" href="#" data-target="daniel">
+                        <span class="material-icons-outlined text-xl">smart_toy</span>Daniel (AI)
+                    </a>
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="settings">
+                        <span class="material-icons-outlined text-xl">settings</span>Settings
+                    </a>
+                </nav>
+                <div class="flex items-center gap-4">
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-white shadow-sm" style='background-image: url("https://placehold.co/40x40/059669/FFFFFF?text=A");'></div>
+                </div>
+            </header>
+
+            <main class="flex flex-1 justify-center py-8 px-4 md:px-10 lg:px-16">
+                <div class="layout-content-container flex w-full max-w-7xl flex-col gap-6">
+
+                    <section id="dashboard" class="content-section hidden">
+                        <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
+                            <div>
+                                <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Goodmorning, Fida.</h1>
+                                <p class="text-slate-600 text-base font-normal leading-normal">Lets make today productive.</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-6">
+                            <div class="stat-card-stitch">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-slate-700 text-base font-medium leading-normal">Unscheduled Jobs</p>
+                                    <span class="material-icons-outlined text-xl text-amber-500">event_busy</span>
+                                </div>
+                                <p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="dashboardUnscheduledJobs">0</p> 
+                            </div>
+                            <div class="stat-card-stitch">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-slate-700 text-base font-medium leading-normal">Scheduled Jobs</p>
+                                    <span class="material-icons-outlined text-xl text-sky-500">event_available</span>
+                                </div>
+                                <p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="dashboardScheduledJobs">0</p>
+                            </div>
+                            <div class="stat-card-stitch">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-slate-700 text-base font-medium leading-normal">Total Jobs</p>
+                                    <span class="material-icons-outlined text-xl text-green-500">summarize</span> 
+                                </div>
+                                <p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="dashboardTotalJobs">0</p>
+                            </div>
+                            <div class="stat-card-stitch">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-slate-700 text-base font-medium leading-normal">Lifetime Trip Sheets</p>
+                                    <span class="material-icons-outlined text-xl text-purple-500">route</span>
+                                </div>
+                                <p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="dashboardLifetimeTripSheets">0</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                            <div class="lg:col-span-2 content-card-stitch">
+                                <h3 class="text-slate-800 text-lg font-semibold leading-normal">Technician Live Overview</h3>
+                                <div class="bg-slate-200 h-96 rounded-lg flex items-center justify-center text-slate-500">
+                                    <span class="material-icons-outlined text-5xl mr-2">map</span> Mock Map Area (Live Locations)
+                                </div>
+                            </div>
+                            <div class="content-card-stitch">
+                                <h3 class="text-slate-800 text-lg font-semibold leading-normal">Latest 5 Jobs</h3>
+                                <ul class="space-y-3" id="dashboardLatestJobsList">
+                                    <li class="p-3 bg-slate-50 border border-slate-200 rounded-md text-slate-500">
+                                        Loading latest jobs...
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="jobs" class="content-section">
+                        <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
+                            <div>
+                                <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Job Management</h1>
+                                <p class="text-slate-600 text-base font-normal leading-normal">Live view of all jobs imported from Gmail.</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-slate-800 text-lg font-semibold leading-normal">All Imported Jobs</h3>
+                                <button id="openAddJobModalButton" class="btn-primary-stitch">
+                                    <span class="material-icons-outlined text-lg">add_circle_outline</span>Add Job Manually
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="custom-table" id="jobsTable"> 
+                                    <thead>
+                                        <tr>
+                                            <th>Customer</th>
+                                            <th>Address</th>
+                                            <th>Issue Reported</th>
+                                            <th>Phone</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="jobsTableBody">
+                                        <!-- Live data will be injected here by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="technicians" class="content-section hidden">
+                        <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
+                            <div>
+                                <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Technician Management</h1>
+                                <p class="text-slate-600 text-base font-normal leading-normal">Manage your field service team's status, location, and capacity.</p>
+                            </div>
+                        </div>
+                        <div id="technician-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                            <!-- Technician cards will be dynamically inserted here -->
+                        </div>
+                    </section>
+
+                    <section id="schedule" class="content-section hidden">
+                         <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
+                            <div>
+                                <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Schedule & Dispatch</h1>
+                                <p class="text-slate-600 text-base font-normal leading-normal">Generate and approve optimized daily routes for all available technicians.</p>
+                            </div>
+                        </div>
+                        <div id="tripSheetApprovalContainer" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-blue-800">Trip Sheets Generated</h3>
+                                <p class="text-sm text-blue-700">Review the routes below. Once satisfied, approve them to finalize the schedule.</p>
+                            </div>
+                            <button id="approveTripSheetsBtn" class="btn-approve-stitch">
+                                <span class="material-icons-outlined">check_circle</span>Approve Trip Sheets
+                            </button>
+                        </div>
+                        <div class="mt-6 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                                <h3 class="text-slate-800 text-lg font-semibold leading-normal">Daily Route Generation</h3>
+                                <div class="flex items-center gap-4 p-2 bg-slate-100 rounded-lg">
+                                    <label for="tripSheetDate" class="form-label text-sm font-semibold mb-0">TRIP SHEET DATE:</label>
+                                    <input type="date" id="tripSheetDate" class="form-input form-input-sm py-2 px-3 border-slate-300 shadow-sm" style="max-width: 200px;">
+                                    <button id="generateTripSheetsBtn" class="btn-primary-stitch">
+                                        <span class="material-icons-outlined text-lg">route</span>Generate Trip Sheets
+                                    </button>
+                                </div>
+                            </div>
+                            <p id="scheduleStatus" class="text-sm text-slate-500 text-center">Select a date to view or generate trip sheets.</p>
+                            <div id="trip-sheets-container" class="space-y-4">
+                                <!-- Trip sheets will be rendered here -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="inventory" class="content-section hidden">
+                        <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
+                            <div>
+                                <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Inventory Management</h1>
+                                <p class="text-slate-600 text-base font-normal leading-normal">Track parts and manage stock levels.</p>
+                            </div>
+                             <div class="flex gap-2">
+                                <button id="openAddPartModalButton" class="btn-primary-stitch"><span class="material-icons-outlined text-lg">add_circle_outline</span>Add New Part</button>
+                                <button id="logPartUsageButton" class="btn-secondary-stitch bg-green-50 border-green-200 text-green-700 hover:bg-green-100"><span class="material-icons-outlined text-sm vm">construction</span>Log Part Usage</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
+                            <div class="stat-card-stitch">
+                                <p class="text-slate-700 text-base font-medium leading-normal">Total Part SKUs</p>
+                                <p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="inventoryTotalSKUs">0</p>
+                                <p class="text-xs text-slate-500">Different parts tracked</p>
+                            </div>
+                            <div class="stat-card-stitch">
+                                <p class="text-slate-700 text-base font-medium leading-normal">Low Stock Items</p>
+                                <p class="text-red-600 text-4xl font-bold leading-tight tracking-tight" id="inventoryLowStockItems">0</p>
+                                <p class="text-xs text-slate-500">Items below reorder level</p>
+                            </div>
+                            <div class="stat-card-stitch">
+                                <p class="text-slate-700 text-base font-medium leading-normal">Est. Inventory Value</p>
+                                <p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="inventoryEstValue">$0</p>
+                                <p class="text-xs text-slate-500">Based on current stock</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h3 class="text-slate-800 text-lg font-semibold leading-normal">Parts Inventory</h3>
+                            <div class="overflow-x-auto">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Part Name</th>
+                                            <th>SKU</th>
+                                            <th>Category</th>
+                                            <th>Current Stock</th>
+                                            <th>Reorder Level</th>
+                                            <th>Unit Cost</th>
+                                            <th>Supplier</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventoryTableBody">
+                                        <tr><td colspan="9" class="text-center text-slate-500 py-4">Loading inventory...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="warranty" class="content-section hidden">
+                        <div class="flex flex-col items-center justify-center h-full text-green-700 p-8 text-center">
+                            <span class="material-icons-outlined text-6xl">construction</span>
+                            <h2 class="text-2xl font-semibold mt-4">Warranty Under Construction</h2>
+                            <p class="text-slate-600 mt-2">This page is currently under construction. Please check back later!</p>
+                        </div>
+                    </section>
+                    <section id="daniel" class="content-section bg-gradient-to-br from-slate-50 via-green-50 to-slate-50 p-0 m-0 flex flex-col" style="height: calc(100vh - 160px);"> 
+                        <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center px-6 pt-6 pb-2">
+                             <div>
+                                <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Daniel - Your AI Assistant</h1>
+                                <p class="text-slate-600 text-base font-normal leading-normal">Ask questions about scheduling, job details, or get quick solutions.</p>
+                            </div>
+                        </div>
+                        <div class="chat-container bg-white flex-grow mx-6 mb-6">
+                            <div id="chatLog" class="chat-log">
+                                <!-- Initial AI message will be added by JavaScript -->
+                            </div>
+                            <div class="chat-input-area">
+                                <input type="text" id="chatInput" class="chat-input" placeholder="Type your question here...">
+                                <button id="sendChatButton" class="chat-send-btn">
+                                    <span class="material-icons-outlined text-lg">send</span>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="settings" class="content-section hidden">
+                        <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
+                            <div>
+                                <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Settings</h1>
+                                <p class="text-slate-600 text-base font-normal leading-normal">Manage your application preferences.</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 content-card-stitch">
+                            <h3 class="text-slate-800 text-lg font-semibold leading-normal mb-4">Appearance</h3>
+                            <div class="flex items-center justify-between py-3">
+                                <label for="darkModeToggle" class="text-slate-700 font-medium">Dark Mode</label>
+                                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="darkModeToggle" id="darkModeToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                    <label for="darkModeToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Toggle to switch between light and dark themes for the application.</p>
+                        </div>
+                        
+                        <style>
+                            .toggle-checkbox:checked {
+                                /* @apply: right-0 border-green-600; */
+                                right: 0;
+                                border-color: #059669; /* Tailwind green-600 */
+                            }
+                            .toggle-checkbox:checked + .toggle-label {
+                                /* @apply: bg-green-600; */
+                                background-color: #059669; /* Tailwind green-600 */
+                            }
+                        </style>
+                    </section>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Job Modal -->
+    <div id="addJobModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Job Manually</h2>
+                <span class="close-button" id="closeAddJobModal">&times;</span>
+            </div>
+            <form id="newJobForm" class="space-y-4">
+                <div>
+                    <label for="jobCustomer" class="form-label">Customer Name</label>
+                    <input type="text" id="jobCustomer" class="form-input" placeholder="e.g., John Doe" required>
+                </div>
+                <div>
+                    <label for="jobAddress" class="form-label">Address</label>
+                    <input type="text" id="jobAddress" class="form-input" placeholder="e.g., 123 Main St, Anytown, CA" required>
+                </div>
+                <div>
+                    <label for="jobIssue" class="form-label">Issue Reported</label>
+                    <textarea id="jobIssue" class="form-input" placeholder="e.g., Garage door won't open, noisy motor" rows="3" required></textarea>
+                </div>
+                <div>
+                    <label for="jobPhone" class="form-label">Phone Number</label>
+                    <input type="tel" id="jobPhone" class="form-input" placeholder="e.g., (555) 123-4567">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" id="cancelAddJob" class="btn-secondary-stitch bg-slate-200 text-slate-700 border-slate-300 hover:bg-slate-300">Cancel</button>
+                    <button type="submit" id="saveJobButton" class="btn-primary-stitch">Save Job</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Technician Edit Modal -->
+    <div id="editTechnicianModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTechName">Edit Technician</h2>
+                <span class="close-button" id="closeEditTechModal">&times;</span>
+            </div>
+            <form id="editTechForm" class="space-y-4">
+                <input type="hidden" id="modalTechId">
+                <div>
+                    <label for="modalTechStatus" class="form-label">Status</label>
+                    <select id="modalTechStatus" class="form-input">
+                        <option value="Online">Online</option>
+                        <option value="Offline">Offline</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="modalTechLocation" class="form-label">Current Location / Starting Point</label>
+                    <input type="text" id="modalTechLocation" class="form-input" placeholder="e.g., 123 Main St, Los Angeles, CA">
+                </div>
+                <div>
+                    <label for="modalTechMaxJobs" class="form-label">Max Jobs Per Day</label>
+                    <input type="number" id="modalTechMaxJobs" class="form-input" placeholder="e.g., 5" min="0">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" id="cancelEditTech" class="btn-secondary-stitch bg-slate-200 text-slate-700 border-slate-300 hover:bg-slate-300">Cancel</button>
+                    <button type="submit" class="btn-primary-stitch">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add Part Modal -->
+    <div id="addPartModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Add New Inventory Part</h2><span class="close-button" id="closeAddPartModal">&times;</span></div>
+            <form id="newPartForm" class="space-y-4">
+                <div><label for="partName" class="form-label">Part Name</label><input type="text" id="partName" class="form-input" placeholder="e.g., Torsion Spring 2-inch" required></div>
+                <div><label for="partSKU" class="form-label">SKU / Part Number</label><input type="text" id="partSKU" class="form-input" placeholder="e.g., TS-002-HD" required></div>
+                <div><label for="partCategory" class="form-label">Category</label><input type="text" id="partCategory" class="form-input" placeholder="e.g., Springs, Cables, Openers"></div>
+                <div><label for="partSupplier" class="form-label">Supplier</label><input type="text" id="partSupplier" class="form-input" placeholder="e.g., SpringMaster Inc."></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label for="partStock" class="form-label">Initial Stock</label><input type="number" id="partStock" class="form-input" value="0" min="0" required></div>
+                    <div><label for="partReorderLevel" class="form-label">Reorder Level</label><input type="number" id="partReorderLevel" class="form-input" value="5" min="0" required></div>
+                </div>
+                <div><label for="partUnitCost" class="form-label">Unit Cost (USD)</label><input type="number" step="0.01" id="partUnitCost" class="form-input" placeholder="e.g., 25.50" min="0" required></div>
+                <input type="hidden" id="partEditId"> <!-- For editing existing parts -->
+                <div class="flex justify-end space-x-3 pt-2"><button type="button" id="cancelAddPart" class="btn-secondary-stitch bg-slate-200 text-slate-700 border-slate-300 hover:bg-slate-300">Cancel</button><button type="submit" id="savePartButton" class="btn-primary-stitch">Add Part</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Log Part Usage Modal -->
+    <div id="logPartUsageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Log Part Usage</h2><span class="close-button" id="closeLogPartUsageModal">&times;</span></div>
+            <form id="logPartUsageForm" class="space-y-4">
+                <div>
+                    <label for="usagePartSKU" class="form-label">Part SKU / Name</label>
+                    <input type="text" id="usagePartSKU" class="form-input" placeholder="Search SKU or Name..." list="inventoryPartsList" required>
+                    <datalist id="inventoryPartsList"></datalist>
+                </div>
+                <div><label for="usageQuantity" class="form-label">Quantity Used</label><input type="number" id="usageQuantity" class="form-input" value="1" min="1" required></div>
+                <div>
+                    <label for="usageTechnician" class="form-label">Technician</label>
+                    <select id="usageTechnician" class="form-input" required>
+                        <!-- Technician options will be populated by JavaScript -->
+                        <option value="">Select Technician</option>
+                    </select>
+                </div>
+                <div><label for="usageJobId" class="form-label">Associated Job ID (Optional)</label><input type="text" id="usageJobId" class="form-input" placeholder="e.g., SW1234 (from jobs list)"></div>
+                <div class="flex justify-end space-x-3 pt-2"><button type="button" id="cancelLogPartUsage" class="btn-secondary-stitch bg-slate-200 text-slate-700 border-slate-300 hover:bg-slate-300">Cancel</button><button type="submit" class="btn-primary-stitch">Log Usage</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Schedule Job Modal -->
+    <div id="scheduleJobModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Schedule Job</h2>
+                <span class="close-button" id="closeScheduleJobModal">&times;</span>
+            </div>
+            <form id="scheduleJobForm" class="space-y-4">
+                <input type="hidden" id="modalScheduleJobId">
+                <div>
+                    <p><strong>Customer:</strong> <span id="modalScheduleCustomer"></span></p>
+                    <p><strong>Address:</strong> <span id="modalScheduleAddress"></span></p>
+                    <p><strong>Issue:</strong> <span id="modalScheduleIssue"></span></p>
+                    <p><strong>Warranty Provider:</strong> <span id="modalScheduleWarrantyProvider"></span></p>
+                    <p><strong>Plan Type:</strong> <span id="modalSchedulePlanType"></span></p>
+                    <p><strong>Dispatch/PO Number:</strong> <span id="modalScheduleDispatchOrPoNumber"></span></p>
+                </div>
+                <div>
+                    <label for="modalJobDate" class="form-label">Select Date</label>
+                    <input type="date" id="modalJobDate" class="form-input" required>
+                </div>
+                <div>
+                    <label for="modalJobTimeSlot" class="form-label">Select Time Slot</label>
+                    <select id="modalJobTimeSlot" class="form-input" required>
+                        <option value="">Select a time slot...</option>
+                        <option value="8am to 2pm">8am to 2pm</option>
+                        <option value="9am to 4pm">9am to 4pm</option>
+                        <option value="12pm to 6pm">12pm to 6pm</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" id="cancelScheduleJob" class="btn-secondary-stitch bg-slate-200 text-slate-700 border-slate-300 hover:bg-slate-300">Cancel</button>
+                    <button type="submit" class="btn-primary-stitch">Confirm Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query, doc, setDoc, updateDoc, addDoc, getDocs, where, orderBy, limit, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjGhWVguIWBAHyyLfTapsF_5Bp6ztRG0",
+            authDomain: "safewayos2.firebaseapp.com",
+            projectId: "safewayos2",
+            storageBucket: "safewayos2.appspot.com",
+            messagingSenderId: "216681158749",
+            appId: "1:216681158749:web:35de32f542ad71fa7295b4"
+        };
+        
+        // --- Cloud Function URLs ---
+        const GENERATE_TRIP_SHEETS_URL = 'https://generate-trip-sheets-216681158749.us-central1.run.app';
+        const ASK_DANIEL_URL = 'https://ask-daniel-216681158749.us-central1.run.app';
+
+        // --- Global State ---
+        let allJobsData = [];
+        let allTechniciansData = [];
+        let inventoryItemsData = [];
+        let currentTripSheets = [];
+        let currentView = 'dashboard';
+        let conversationHistory = [];
+        let currentTripSheetListener = null;
+
+        // --- DOM Elements ---
+        const jobsTableBody = document.getElementById('jobsTableBody');
+        const jobsTable = document.getElementById('jobsTable');
+        const technicianCardsContainer = document.getElementById('technician-cards-container');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const contentSections = document.querySelectorAll('.content-section');
+        
+        const editTechModal = document.getElementById('editTechnicianModal');
+        const closeEditTechModalBtn = document.getElementById('closeEditTechModal');
+        const cancelEditTechBtn = document.getElementById('cancelEditTech');
+        const editTechForm = document.getElementById('editTechForm');
+        
+        const scheduleJobModal = document.getElementById('scheduleJobModal');
+        const closeScheduleJobModalBtn = document.getElementById('closeScheduleJobModal');
+        const cancelScheduleJobBtn = document.getElementById('cancelScheduleJob');
+        const scheduleJobForm = document.getElementById('scheduleJobForm');
+        
+        const generateTripSheetsBtn = document.getElementById('generateTripSheetsBtn');
+        const scheduleStatus = document.getElementById('scheduleStatus');
+        const tripSheetsContainer = document.getElementById('trip-sheets-container');
+        const tripSheetDateInput = document.getElementById('tripSheetDate');
+        const tripSheetApprovalContainer = document.getElementById('tripSheetApprovalContainer');
+        const approveTripSheetsBtn = document.getElementById('approveTripSheetsBtn');
+
+        const addJobModal = document.getElementById('addJobModal');
+        const openAddJobModalButton = document.getElementById('openAddJobModalButton');
+        const closeAddJobModalButton = document.getElementById('closeAddJobModal');
+        const cancelAddJobButton = document.getElementById('cancelAddJob');
+        const newJobForm = document.getElementById('newJobForm');
+
+        const inventoryTableBody = document.getElementById('inventoryTableBody');
+        const inventoryTotalSKUs = document.getElementById('inventoryTotalSKUs');
+        const inventoryLowStockItems = document.getElementById('inventoryLowStockItems');
+        const inventoryEstValue = document.getElementById('inventoryEstValue');
+
+        const addPartModal = document.getElementById('addPartModal');
+        const openAddPartModalButton = document.getElementById('openAddPartModalButton');
+        const closeAddPartModalButton = document.getElementById('closeAddPartModal');
+        const cancelAddPartButton = document.getElementById('cancelAddPart');
+        const newPartForm = document.getElementById('newPartForm');
+        const savePartButton = document.getElementById('savePartButton');
+
+        const logPartUsageModal = document.getElementById('logPartUsageModal');
+        const openLogPartUsageButton = document.getElementById('logPartUsageButton');
+        const closeLogPartUsageModalButton = document.getElementById('closeLogPartUsageModal');
+        const cancelLogPartUsageButton = document.getElementById('cancelLogPartUsage');
+        const logPartUsageForm = document.getElementById('logPartUsageForm');
+        const usageTechnicianSelect = document.getElementById('usageTechnician');
+        const inventoryPartsDatalist = document.getElementById('inventoryPartsList');
+
+        const dashboardUnscheduledJobsEl = document.getElementById('dashboardUnscheduledJobs');
+        const dashboardScheduledJobsEl = document.getElementById('dashboardScheduledJobs');
+        const dashboardTotalJobsEl = document.getElementById('dashboardTotalJobs');
+        const dashboardLifetimeTripSheetsEl = document.getElementById('dashboardLifetimeTripSheets');
+        const dashboardLatestJobsListEl = document.getElementById('dashboardLatestJobsList');
+
+        const chatLog = document.getElementById('chatLog');
+        const chatInput = document.getElementById('chatInput');
+        const sendChatButton = document.getElementById('sendChatButton');
+
+
+        // --- Render Functions ---
+        function renderJobs(jobs) {
+            allJobsData = jobs;
+            if (!jobsTableBody || !jobsTable) return; 
+
+            jobsTable.classList.remove('hidden'); 
+            jobsTableBody.innerHTML = ''; 
+
+            if (jobs.length === 0) {
+                jobsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-slate-500 py-4">No jobs found. Waiting for new emails...</td></tr>`;
+                return; 
+            }
+            
+            const sortedJobs = [...jobs].sort((a, b) => {
+                const dateA = a.createdAt && typeof a.createdAt.toDate === 'function' ? a.createdAt.toDate() : new Date(0);
+                const dateB = b.createdAt && typeof b.createdAt.toDate === 'function' ? b.createdAt.toDate() : new Date(0);
+                return dateB - dateA;
+            });
+            jobsTableBody.innerHTML = sortedJobs.map(job => {
+                let statusText = job.status || 'Needs Scheduling';
+                let statusClass = 'status-needs-scheduling';
+                
+                if (statusText === 'Scheduled') {
+                    statusClass = 'status-scheduled';
+                    if (job.scheduledDate && job.timeSlot) {
+                        statusText = `Scheduled: ${job.scheduledDate} (${job.timeSlot})`;
+                    }
+                } else if (statusText === 'Awaiting completion') {
+                    statusClass = 'status-awaiting-completion';
+                } else if (statusText === 'Completed') {
+                    statusClass = 'status-completed';
+                }
+                return `
+                    <tr>
+                        <td class="font-medium text-slate-800">${job.customer || 'N/A'}</td>
+                        <td>${job.address || 'N/A'}</td>
+                        <td>${job.issue || 'N/A'}</td>
+                        <td>${job.phone || 'N/A'}</td>
+                        <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+                        <td><button class="btn-secondary-stitch schedule-job-btn" data-id="${job.id}">View/Schedule</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderTechnicians(technicians) {
+            allTechniciansData = technicians;
+            if (!technicianCardsContainer) return;
+            technicianCardsContainer.innerHTML = technicians.map(tech => {
+                const statusClass = tech.status === 'Online' ? 'status-online' : 'status-offline';
+                const avatarChar = tech.name ? tech.name.charAt(0).toUpperCase() : 'T';
+                const avatarColor = tech.status === 'Online' ? '059669' : '64748b';
+
+                return `
+                <div class="stat-card-stitch">
+                    <div class="flex items-center mb-2">
+                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-12 border-2 border-white shadow-sm mr-3" style='background-image: url("https://placehold.co/50x50/${avatarColor}/FFFFFF?text=${avatarChar}");'></div>
+                        <div>
+                            <h4 class="text-slate-800 text-lg font-semibold">${tech.name}</h4>
+                            <p class="text-sm text-slate-500">Lead Technician</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-600 truncate"><span class="material-icons-outlined text-sm text-green-600 vm">location_on</span> ${tech.currentLocation || 'Not set'}</p>
+                    <p class="text-sm text-slate-600"><span class="material-icons-outlined text-sm text-green-600 vm">speed</span> Capacity: ${tech.maxJobs} jobs/day</p>
+                    <div class="mt-2 flex items-center justify-between">
+                        <span class="status-pill ${statusClass}">${tech.status}</span>
+                        <button class="btn-secondary-stitch manage-tech-btn" data-id="${tech.id}">Manage</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+        
+        function renderTripSheets(tripSheets, date) {
+            currentTripSheets = tripSheets;
+            if (!tripSheetsContainer) return;
+            
+            const displayDate = date ? new Date(date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : "the selected date";
+
+            if (!tripSheets || tripSheets.length === 0) {
+                 tripSheetsContainer.innerHTML = `<div class="text-center py-8 text-slate-400"><span class="material-icons-outlined text-4xl">calendar_today</span><p>No trip sheets have been generated for ${displayDate}.</p></div>`;
+                 tripSheetApprovalContainer.classList.add('hidden');
+                 return;
+            }
+
+            let html = '';
+            let isAnyJobNotApproved = false;
+            
+            // We need to check the *live* status from allJobsData, not the potentially stale status in the trip sheet object
+            const jobIdsInSheets = new Set(tripSheets.flatMap(sheet => sheet.route.map(job => job.id)));
+            const liveJobs = allJobsData.filter(job => jobIdsInSheets.has(job.id));
+            
+            liveJobs.forEach(job => {
+                if (job.status === 'Scheduled') {
+                    isAnyJobNotApproved = true;
+                }
+            });
+
+            tripSheets.forEach(sheet => {
+                const avatarChar = sheet.technicianName ? sheet.technicianName.charAt(0).toUpperCase() : 'T';
+                html += `
+                <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h4 class="font-semibold text-green-700 text-md mb-2 flex items-center">
+                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 border-2 border-white shadow-sm mr-2" style='background-image: url("https://placehold.co/40x40/059669/FFFFFF?text=${avatarChar}");'></div>
+                        ${sheet.technicianName}'s Route
+                    </h4>
+                    <ol class="list-decimal list-inside text-sm text-slate-700 space-y-2 pl-2">
+                        ${sheet.route.map(job => `
+                            <li>
+                                <span class="font-semibold">${job.timeSlot}</span> - ${job.address}
+                                <br>
+                                <span class="text-xs text-slate-600">(${job.customer} - ${job.issue})</span>
+                            </li>
+                        `).join('')}
+                    </ol>
+                </div>
+                `;
+            });
+            tripSheetsContainer.innerHTML = html;
+
+            if (isAnyJobNotApproved) {
+                tripSheetApprovalContainer.classList.remove('hidden');
+                approveTripSheetsBtn.disabled = false;
+                approveTripSheetsBtn.innerHTML = `<span class="material-icons-outlined">check_circle</span>Approve Trip Sheets`;
+            } else {
+                tripSheetApprovalContainer.classList.remove('hidden');
+                approveTripSheetsBtn.disabled = true;
+                approveTripSheetsBtn.innerHTML = `<span class="material-icons-outlined">check_circle_outline</span>Sheets Approved`;
+            }
+        }
+
+        function renderInventory(items) {
+            inventoryItemsData = items; 
+            if (!inventoryTableBody) return;
+
+            if (inventoryTotalSKUs) inventoryTotalSKUs.textContent = items.length;
+            
+            let lowStockCount = 0;
+            let totalValue = 0;
+            items.forEach(item => {
+                if (item.currentStock < item.reorderLevel) {
+                    lowStockCount++;
+                }
+                totalValue += (item.currentStock * (item.unitCost || 0) );
+            });
+            if (inventoryLowStockItems) inventoryLowStockItems.textContent = lowStockCount;
+            if (inventoryEstValue) inventoryEstValue.textContent = `$${totalValue.toFixed(2)}`;
+
+            if (items.length === 0) {
+                inventoryTableBody.innerHTML = `<tr><td colspan="9" class="text-center text-slate-500 py-4">No inventory items found. Click "Add New Part" to get started.</td></tr>`;
+            } else {
+                inventoryTableBody.innerHTML = items.map(item => {
+                    let statusClass = 'status-instock';
+                    let statusText = 'In Stock';
+                    if (item.currentStock < item.reorderLevel) {
+                        statusClass = 'status-lowstock';
+                        statusText = 'Low Stock';
+                    }
+                    if (item.currentStock === 0) {
+                        statusText = 'Out of Stock';
+                    }
+                    return `
+                        <tr>
+                            <td class="font-medium text-slate-800">${item.partName}</td>
+                            <td>${item.sku}</td>
+                            <td>${item.category || 'N/A'}</td>
+                            <td>${item.currentStock}</td>
+                            <td>${item.reorderLevel}</td>
+                            <td>$${item.unitCost ? item.unitCost.toFixed(2) : '0.00'}</td>
+                            <td>${item.supplier || 'N/A'}</td>
+                            <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+                            <td>
+                                <button class="btn-secondary-stitch text-xs edit-part-btn" data-id="${item.id}">Edit</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            if (inventoryPartsDatalist) {
+                inventoryPartsDatalist.innerHTML = items.map(item => `<option value="${item.sku}">${item.partName}</option>`).join('');
+            }
+        }
+        
+        function populateTechnicianDropdowns() {
+            if (!usageTechnicianSelect || !allTechniciansData) return;
+            
+            const currentSelection = usageTechnicianSelect.value;
+            usageTechnicianSelect.innerHTML = '<option value="">Select Technician</option>';
+            allTechniciansData.forEach(tech => {
+                if (tech.status === 'Online') {
+                    const option = document.createElement('option');
+                    option.value = tech.id;
+                    option.textContent = tech.name;
+                    usageTechnicianSelect.appendChild(option);
+                }
+            });
+            if (currentSelection && usageTechnicianSelect.querySelector(`option[value="${currentSelection}"]`)) {
+                usageTechnicianSelect.value = currentSelection;
+            }
+        }
+        
+        // **FIXED**: Dashboard rendering functions
+
+        // Helper function to animate counting up
+        function animateCountUp(element, targetValue, duration = 500) {
+            if (!element) return;
+            // Ensure targetValue is a number, default to 0 if not
+            targetValue = Number(targetValue) || 0;
+
+            const startValue = parseInt(element.textContent, 10) || 0;
+            const startTime = performance.now();
+
+            function updateCount(currentTime) {
+                const elapsedTime = currentTime - startTime;
+                if (elapsedTime >= duration) {
+                    element.textContent = targetValue;
+                    return;
+                }
+                const progress = elapsedTime / duration;
+                // Ease-out quint function for smoother animation
+                const easedProgress = 1 - Math.pow(1 - progress, 3); 
+                const currentValue = Math.round(startValue + (targetValue - startValue) * easedProgress);
+                element.textContent = currentValue;
+                requestAnimationFrame(updateCount);
+            }
+            requestAnimationFrame(updateCount);
+        }
+
+        function renderDashboardStats(jobs, tripSheets) {
+            const unscheduledJobsCount = jobs.filter(j => j.status === 'Needs Scheduling').length;
+            const scheduledJobsCount = jobs.filter(j => j.status === 'Scheduled' || j.status === 'Awaiting completion').length;
+            const totalJobsCount = jobs.length;
+            const totalTripSheetsCount = tripSheets.length;
+
+            // Use the animateCountUp function for dashboard stats
+            animateCountUp(dashboardUnscheduledJobsEl, unscheduledJobsCount);
+            animateCountUp(dashboardScheduledJobsEl, scheduledJobsCount);
+            animateCountUp(dashboardTotalJobsEl, totalJobsCount);
+            animateCountUp(dashboardLifetimeTripSheetsEl, totalTripSheetsCount);
+
+            const latestJobs = [...jobs].sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate()).slice(0, 5);
+            if (dashboardLatestJobsListEl) {
+                if (latestJobs.length === 0) {
+                    dashboardLatestJobsListEl.innerHTML = `<li class="p-3 text-slate-500">No jobs found yet.</li>`;
+                } else {
+                    // Clear existing items before adding new ones to prevent duplication if function is called multiple times
+                    dashboardLatestJobsListEl.innerHTML = ''; 
+                    latestJobs.forEach((job, index) => {
+                        const issueSummary = job.issue ? job.issue.substring(0, 50) + (job.issue.length > 50 ? '...' : '') : 'No issue description';
+                        const customerName = job.customer || 'N/A';
+                        
+                        const listItem = document.createElement('li');
+                        listItem.className = 'latest-job-item p-3 bg-slate-50 border border-slate-200 rounded-md hover:bg-slate-100 transition-colors';
+                        // Apply a staggered delay for the animation
+                        listItem.style.setProperty('--animation-delay', `${index * 0.07}s`); 
+                        
+                        listItem.innerHTML = `
+                            <p class="font-medium text-slate-700">${customerName} - <span class="text-sm text-slate-600">${issueSummary}</span></p>
+                            <p class="text-xs text-slate-500">${job.address || 'No address'} - <span class="font-semibold">${job.status || 'N/A'}</span></p>
+                        `;
+                        dashboardLatestJobsListEl.appendChild(listItem);
+
+                        // Trigger the animation by adding the visible class after a short delay
+                        setTimeout(() => {
+                            listItem.classList.add('latest-job-item-visible');
+                        }, 50); // Small delay to ensure transition occurs
+                    });
+                }
+            }
+        }
+
+        // --- UI Navigation ---
+        function switchView(targetId) {
+            contentSections.forEach(section => section.classList.add('hidden'));
+            const activeSection = document.getElementById(targetId);
+            if (activeSection) activeSection.classList.remove('hidden');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.target === targetId) {
+                    link.classList.add('active');
+                    currentView = targetId;
+                }
+            });
+
+            if (targetId === 'schedule') {
+                loadTripSheetsForDate(tripSheetDateInput.value);
+            }
+            if (targetId === 'daniel') {
+                chatInput.focus();
+            }
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView(e.currentTarget.dataset.target);
+            });
+        });
+
+        // --- Modal Logic ---
+        function openEditTechModal(tech) {
+            if (!tech) return;
+            document.getElementById('modalTechId').value = tech.id;
+            document.getElementById('modalTechName').textContent = `Edit ${tech.name}`;
+            document.getElementById('modalTechStatus').value = tech.status;
+            document.getElementById('modalTechLocation').value = tech.currentLocation;
+            document.getElementById('modalTechMaxJobs').value = tech.maxJobs;
+            editTechModal.style.display = 'block';
+        }
+
+        function closeEditTechModal() {
+            editTechModal.style.display = 'none';
+            editTechForm.reset();
+        }
+        
+        function openScheduleJobModal(job) {
+            if (!job) return;
+            document.getElementById('modalScheduleJobId').value = job.id;
+            document.getElementById('modalScheduleCustomer').textContent = job.customer || 'N/A';
+            document.getElementById('modalScheduleAddress').textContent = job.address || 'N/A';
+            document.getElementById('modalScheduleIssue').textContent = job.issue || 'N/A';
+            document.getElementById('modalScheduleWarrantyProvider').textContent = job.warrantyProvider || 'N/A';
+            document.getElementById('modalSchedulePlanType').textContent = job.planType || 'N/A';
+            document.getElementById('modalScheduleDispatchOrPoNumber').textContent = job.dispatchOrPoNumber || 'N/A';
+            
+            const dateInput = document.getElementById('modalJobDate');
+            dateInput.value = job.scheduledDate || new Date().toISOString().split('T')[0];
+
+            const timeSlotSelect = document.getElementById('modalJobTimeSlot');
+            timeSlotSelect.value = job.timeSlot || "";
+            
+            scheduleJobModal.style.display = 'block';
+        }
+
+        function closeScheduleJobModal() {
+            scheduleJobModal.style.display = 'none';
+            scheduleJobForm.reset();
+        }
+
+        closeEditTechModalBtn.addEventListener('click', closeEditTechModal);
+        cancelEditTechBtn.addEventListener('click', closeEditTechModal);
+        closeScheduleJobModalBtn.addEventListener('click', closeScheduleJobModal);
+        cancelScheduleJobBtn.addEventListener('click', closeScheduleJobModal);
+
+        if(openAddJobModalButton) openAddJobModalButton.addEventListener('click', () => addJobModal.style.display = 'block');
+        if(closeAddJobModalButton) closeAddJobModalButton.addEventListener('click', () => addJobModal.style.display = 'none');
+        if(cancelAddJobButton) cancelAddJobButton.addEventListener('click', () => addJobModal.style.display = 'none');
+        
+
+        // --- Firebase Logic ---
+        let db;
+        
+        async function initializeTechnicians() {
+            const techCollection = collection(db, 'technicians');
+            const snapshot = await getDocs(techCollection);
+            if (snapshot.empty) {
+                const defaultTechnicians = [
+                    { name: 'Ibaidallah', status: 'Online', currentLocation: '1100 S Flower St, Los Angeles, CA 90015', maxJobs: 8 },
+                    { name: 'Khaled', status: 'Online', currentLocation: '4059 Van Nuys Blvd, Sherman Oaks, CA 91403', maxJobs: 5 },
+                    { name: 'Ahmed', status: 'Online', currentLocation: '189 The Grove Dr, Los Angeles, CA 90036', maxJobs: 5 },
+                    { name: 'Omar', status: 'Offline', currentLocation: 'Home Base', maxJobs: 5 }
+                ];
+                for (const tech of defaultTechnicians) {
+                    await addDoc(techCollection, tech);
+                }
+            }
+        }
+
+        function listenForJobs() {
+            const jobsQuery = query(collection(db, "jobs"), orderBy("createdAt", "desc"));
+            onSnapshot(jobsQuery, (snapshot) => {
+                allJobsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderJobs(allJobsData);
+                // **FIXED**: Refresh dashboard and schedule view whenever jobs change
+                if (currentView === 'dashboard') {
+                    listenForDashboardData();
+                }
+                if (currentView === 'schedule') {
+                    loadTripSheetsForDate(tripSheetDateInput.value);
+                }
+            }, (error) => {
+                console.error("Error listening for jobs:", error);
+            });
+        }
+
+        function listenForTechnicians() {
+            const techQuery = query(collection(db, "technicians"));
+            onSnapshot(techQuery, (snapshot) => {
+                const technicians = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allTechniciansData = technicians;
+                renderTechnicians(technicians);
+                populateTechnicianDropdowns();
+            }, (error) => console.error("Error listening for technicians:", error));
+        }
+
+        async function initializeInventory() {
+            const inventoryCollection = collection(db, 'inventoryItems');
+            const snapshot = await getDocs(inventoryCollection);
+            if (snapshot.empty) {
+                console.log("Inventory collection is empty. No default items will be added.");
+            }
+        }
+
+        function listenForInventoryItems() {
+            const inventoryQuery = query(collection(db, "inventoryItems"), orderBy("createdAt", "desc"));
+            onSnapshot(inventoryQuery, (snapshot) => {
+                const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderInventory(items);
+            }, (error) => console.error("Error listening for inventory items:", error));
+        }
+
+        // **FIXED**: New function to listen to all data needed for the dashboard
+        function listenForDashboardData() {
+            const tripSheetsQuery = query(collection(db, "tripSheets"));
+            // We already have a listener for jobs, so we just need one for trip sheets
+            onSnapshot(tripSheetsQuery, (snapshot) => {
+                const tripSheets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderDashboardStats(allJobsData, tripSheets);
+            }, (error) => {
+                console.error("Error listening for trip sheets for dashboard:", error);
+            });
+        }
+
+
+        // --- Form Submit Handlers ---
+        editTechForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const techId = document.getElementById('modalTechId').value;
+            const techRef = doc(db, 'technicians', techId);
+            const updatedData = {
+                status: document.getElementById('modalTechStatus').value,
+                currentLocation: document.getElementById('modalTechLocation').value,
+                maxJobs: parseInt(document.getElementById('modalTechMaxJobs').value, 10)
+            };
+            try {
+                await updateDoc(techRef, updatedData);
+                closeEditTechModal();
+            } catch (error) {
+                console.error("Error updating technician:", error);
+            }
+        });
+        
+        scheduleJobForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const jobId = document.getElementById('modalScheduleJobId').value;
+            const jobRef = doc(db, 'jobs', jobId);
+            const updatedData = {
+                status: 'Scheduled',
+                scheduledDate: document.getElementById('modalJobDate').value,
+                timeSlot: document.getElementById('modalJobTimeSlot').value
+            };
+            try {
+                await updateDoc(jobRef, updatedData);
+                closeScheduleJobModal();
+            } catch (error) {
+                console.error("Error scheduling job:", error);
+            }
+        });
+
+        // --- Event Listener Delegation & Modal Close on Outside Click ---
+        document.body.addEventListener('click', function(event) {
+            if (event.target.classList.contains('manage-tech-btn')) {
+                const techId = event.target.dataset.id;
+                const techData = allTechniciansData.find(t => t.id === techId);
+                if(techData) openEditTechModal(techData);
+            }
+            if (event.target.classList.contains('schedule-job-btn')) {
+                const jobId = event.target.dataset.id;
+                const jobData = allJobsData.find(j => j.id === jobId);
+                if(jobData) openScheduleJobModal(jobData);
+            }
+            if (event.target.classList.contains('edit-part-btn')) {
+                const partId = event.target.dataset.id;
+                const partData = inventoryItemsData.find(p => p.id === partId);
+                if(partData) openAddPartModal(partData); 
+            }
+        });
+        
+        window.addEventListener('click', (event) => {
+            if (event.target == editTechModal) closeEditTechModal();
+            if (event.target == scheduleJobModal) closeScheduleJobModal();
+            if (event.target == addPartModal) closeAddPartModal();
+            if (event.target == logPartUsageModal) closeLogPartUsageModal();
+            if (event.target == addJobModal) addJobModal.style.display = 'none';
+        });
+
+        // --- Inventory Modal Logic & Form Submissions ---
+        function openAddPartModal(item = null) {
+            newPartForm.reset();
+            const modalTitle = addPartModal.querySelector('.modal-header h2');
+            const partEditIdField = document.getElementById('partEditId');
+
+            if (item) { // Editing existing item
+                modalTitle.textContent = 'Edit Inventory Part';
+                savePartButton.textContent = 'Save Changes';
+                partEditIdField.value = item.id;
+                document.getElementById('partName').value = item.partName;
+                document.getElementById('partSKU').value = item.sku;
+                document.getElementById('partCategory').value = item.category || '';
+                document.getElementById('partSupplier').value = item.supplier || '';
+                document.getElementById('partStock').value = item.currentStock;
+                document.getElementById('partReorderLevel').value = item.reorderLevel;
+                document.getElementById('partUnitCost').value = item.unitCost;
+                document.getElementById('partSKU').disabled = true;
+            } else { // Adding new item
+                modalTitle.textContent = 'Add New Inventory Part';
+                savePartButton.textContent = 'Add Part';
+                partEditIdField.value = '';
+                document.getElementById('partSKU').disabled = false;
+            }
+            addPartModal.style.display = 'block';
+        }
+
+        function closeAddPartModal() {
+            addPartModal.style.display = 'none';
+            newPartForm.reset();
+            document.getElementById('partSKU').disabled = false;
+        }
+        
+        if(openAddPartModalButton) openAddPartModalButton.addEventListener('click', () => openAddPartModal());
+        if(closeAddPartModalButton) closeAddPartModalButton.addEventListener('click', closeAddPartModal);
+        if(cancelAddPartButton) cancelAddPartButton.addEventListener('click', closeAddPartModal);
+
+        newPartForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const partEditId = document.getElementById('partEditId').value;
+            const partData = {
+                partName: document.getElementById('partName').value,
+                sku: document.getElementById('partSKU').value,
+                category: document.getElementById('partCategory').value,
+                supplier: document.getElementById('partSupplier').value,
+                currentStock: parseInt(document.getElementById('partStock').value, 10),
+                reorderLevel: parseInt(document.getElementById('partReorderLevel').value, 10),
+                unitCost: parseFloat(document.getElementById('partUnitCost').value),
+            };
+
+            try {
+                if (partEditId) {
+                    const partRef = doc(db, 'inventoryItems', partEditId);
+                    await updateDoc(partRef, partData);
+                } else {
+                    const skuQuery = query(collection(db, "inventoryItems"), where("sku", "==", partData.sku));
+                    const skuSnapshot = await getDocs(skuQuery);
+                    if (!skuSnapshot.empty) {
+                        alert(`Error: SKU "${partData.sku}" already exists. Please use a unique SKU.`);
+                        return;
+                    }
+                    partData.createdAt = serverTimestamp();
+                    await addDoc(collection(db, 'inventoryItems'), partData);
+                }
+                closeAddPartModal();
+            } catch (error) {
+                console.error("Error saving part:", error);
+                alert(`Error saving part: ${error.message}`);
+            }
+        });
+
+
+        function openLogPartUsageModal() {
+            logPartUsageForm.reset();
+            logPartUsageModal.style.display = 'block';
+        }
+
+        function closeLogPartUsageModal() {
+            logPartUsageModal.style.display = 'none';
+            logPartUsageForm.reset();
+        }
+
+        if(openLogPartUsageButton) openLogPartUsageButton.addEventListener('click', openLogPartUsageModal);
+        if(closeLogPartUsageModalButton) closeLogPartUsageModalButton.addEventListener('click', closeLogPartUsageModal);
+        if(cancelLogPartUsageButton) cancelLogPartUsageButton.addEventListener('click', closeLogPartUsageModal);
+
+        logPartUsageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const skuToLog = document.getElementById('usagePartSKU').value;
+            const quantityUsed = parseInt(document.getElementById('usageQuantity').value, 10);
+            const technicianId = document.getElementById('usageTechnician').value;
+            const jobId = document.getElementById('usageJobId').value;
+
+            if (quantityUsed <= 0) {
+                alert("Quantity used must be greater than zero.");
+                return;
+            }
+
+            const itemToUpdate = inventoryItemsData.find(item => item.sku === skuToLog);
+
+            if (!itemToUpdate) {
+                alert(`Part with SKU "${skuToLog}" not found.`);
+                return;
+            }
+
+            if (itemToUpdate.currentStock < quantityUsed) {
+                alert(`Not enough stock for SKU "${skuToLog}". Available: ${itemToUpdate.currentStock}, Tried to use: ${quantityUsed}`);
+                return;
+            }
+            
+            const newStock = itemToUpdate.currentStock - quantityUsed;
+            const partRef = doc(db, 'inventoryItems', itemToUpdate.id);
+
+            try {
+                await updateDoc(partRef, { currentStock: newStock });
+                
+                await addDoc(collection(db, 'inventoryUsageLog'), {
+                    sku: skuToLog,
+                    partName: itemToUpdate.partName,
+                    quantityUsed: quantityUsed,
+                    technicianId: technicianId, 
+                    jobId: jobId || null,
+                    loggedAt: serverTimestamp()
+                });
+
+                closeLogPartUsageModal();
+            } catch (error) {
+                console.error("Error logging part usage:", error);
+                alert(`Error logging part usage: ${error.message}`);
+            }
+        });
+
+        if (newJobForm) {
+            const saveJobButton = document.getElementById('saveJobButton');
+            newJobForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (saveJobButton.disabled) return;
+                saveJobButton.disabled = true;
+                saveJobButton.textContent = 'Saving...';
+                const jobData = {
+                    customer: document.getElementById('jobCustomer').value,
+                    address: document.getElementById('jobAddress').value,
+                    issue: document.getElementById('jobIssue').value,
+                    phone: document.getElementById('jobPhone').value,
+                    status: 'Needs Scheduling',
+                    createdAt: serverTimestamp()
+                };
+                try {
+                    await addDoc(collection(db, 'jobs'), jobData);
+                    addJobModal.style.display = 'none';
+                    newJobForm.reset();
+                } catch (error) {
+                    console.error("Error adding new job:", error);
+                    alert(`Error adding job: ${error.message}`);
+                } finally {
+                    saveJobButton.disabled = false;
+                    saveJobButton.textContent = 'Save Job';
+                }
+            });
+        }
+
+        if(openAddJobModalButton && addJobModal) {
+            openAddJobModalButton.addEventListener('click', () => {
+                addJobModal.style.display = 'block';
+                const saveJobButton = document.getElementById('saveJobButton');
+                if(saveJobButton) {
+                    saveJobButton.disabled = false;
+                    saveJobButton.textContent = 'Save Job';
+                }
+                newJobForm.reset();
+            });
+        }
+        
+        // --- Trip Sheet Generation & Approval ---
+        generateTripSheetsBtn.addEventListener('click', async () => {
+            const selectedDate = tripSheetDateInput.value;
+            if (!selectedDate) {
+                alert("Please select a date for the trip sheets.");
+                tripSheetDateInput.focus();
+                return;
+            }
+
+            generateTripSheetsBtn.disabled = true;
+            generateTripSheetsBtn.innerHTML = `<span class="material-icons-outlined text-lg animate-spin">sync</span> Generating...`;
+            scheduleStatus.textContent = `Generating trip sheets for ${selectedDate}. This may take a moment.`;
+            tripSheetsContainer.innerHTML = `<div class="text-center py-8 text-slate-400"><span class="material-icons-outlined text-4xl animate-spin">settings</span><p>Optimizing routes for ${selectedDate}...</p></div>`;
+            tripSheetApprovalContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch(GENERATE_TRIP_SHEETS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: selectedDate })
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    const errorDetail = result.error || result.message || 'An unknown server error occurred.';
+                    throw new Error(errorDetail);
+                }
+                scheduleStatus.textContent = `Successfully generated trip sheets for ${selectedDate}. Review and approve to finalize.`;
+            } catch (error) {
+                console.error('Error generating trip sheets:', error);
+                scheduleStatus.textContent = `Error generating trip sheets for ${selectedDate}: ${error.message}`;
+                tripSheetsContainer.innerHTML = `<div class="text-center py-8 text-red-500"><span class="material-icons-outlined text-4xl">error</span><p>Failed to generate trip sheets for ${selectedDate}.</p><p class="text-sm">${error.message}</p></div>`;
+            } finally {
+                generateTripSheetsBtn.disabled = false;
+                generateTripSheetsBtn.innerHTML = `<span class="material-icons-outlined text-lg">route</span>Generate Trip Sheets`;
+            }
+        });
+
+        // **FIXED**: Approve Trip Sheets Button Logic
+        approveTripSheetsBtn.addEventListener('click', async () => {
+            const date = tripSheetDateInput.value;
+            if (!currentTripSheets || currentTripSheets.length === 0) {
+                alert("No trip sheets to approve.");
+                return;
+            }
+
+            approveTripSheetsBtn.disabled = true;
+            approveTripSheetsBtn.innerHTML = `<span class="material-icons-outlined animate-spin">sync</span>Approving...`;
+
+            try {
+                const batch = writeBatch(db);
+                const jobsToUpdate = new Set();
+                
+                currentTripSheets.forEach(sheet => {
+                    sheet.route.forEach(job => {
+                        const liveJob = allJobsData.find(j => j.id === job.id);
+                        if (liveJob && liveJob.status === 'Scheduled') {
+                           jobsToUpdate.add(job.id);
+                        }
+                    });
+                });
+                
+                if (jobsToUpdate.size > 0) {
+                    jobsToUpdate.forEach(jobId => {
+                         const jobRef = doc(db, 'jobs', jobId);
+                         batch.update(jobRef, { status: 'Awaiting completion' });
+                    });
+                    await batch.commit();
+                    scheduleStatus.textContent = `Successfully approved ${jobsToUpdate.size} jobs for ${date}.`;
+                    // The job listener will automatically refresh the UI, including the button state.
+                } else {
+                    scheduleStatus.textContent = `All jobs for ${date} were already approved.`;
+                    approveTripSheetsBtn.innerHTML = `<span class="material-icons-outlined">check_circle_outline</span>Sheets Approved`;
+                    approveTripSheetsBtn.disabled = true;
+                }
+
+            } catch (error) {
+                console.error("Error approving trip sheets:", error);
+                scheduleStatus.textContent = `Error approving trip sheets: ${error.message}`;
+                approveTripSheetsBtn.disabled = false;
+                approveTripSheetsBtn.innerHTML = `<span class="material-icons-outlined">check_circle</span>Approve Trip Sheets`;
+            }
+        });
+
+        function loadTripSheetsForDate(dateString) {
+            if (!db || !dateString) {
+                if (tripSheetsContainer) tripSheetsContainer.innerHTML = `<div class="text-center py-8 text-slate-400"><p>Please select a date to view trip sheets.</p></div>`;
+                tripSheetApprovalContainer.classList.add('hidden');
+                return;
+            }
+            if (currentTripSheetListener) {
+                currentTripSheetListener(); 
+            }
+            const tripSheetQuery = query(collection(db, "tripSheets"), where("date", "==", dateString));
+            currentTripSheetListener = onSnapshot(tripSheetQuery, (snapshot) => {
+                const sheets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (currentView === 'schedule' && tripSheetDateInput.value === dateString) {
+                    renderTripSheets(sheets, dateString);
+                }
+            }, (error) => {
+                console.error(`Error listening to trip sheets for ${dateString}:`, error);
+                if (tripSheetsContainer) tripSheetsContainer.innerHTML = `<div class="text-center py-8 text-red-500"><p>Error loading trip sheets for ${dateString}.</p></div>`;
+                tripSheetApprovalContainer.classList.add('hidden');
+            });
+        }
+
+        // --- Main Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (tripSheetDateInput) {
+                tripSheetDateInput.value = new Date().toISOString().split('T')[0];
+                tripSheetDateInput.addEventListener('change', (event) => {
+                    loadTripSheetsForDate(event.target.value);
+                    if(scheduleStatus) scheduleStatus.textContent = `Displaying trip sheets for ${new Date(event.target.value + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}. Press 'Generate' to create or update.`;
+                });
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                db = getFirestore(app);
+                console.log("Firebase Initialized.");
+
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        initializeTechnicians().then(() => {
+                           listenForJobs(); // This now handles dashboard updates
+                           listenForTechnicians();
+                           initializeInventory().then(listenForInventoryItems);
+                           listenForDashboardData(); // Set up the dashboard listener
+                           if (tripSheetDateInput.value) {
+                               loadTripSheetsForDate(tripSheetDateInput.value);
+                           }
+                        });
+                    } else {
+                        signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed:", error));
+                    }
+                });
+
+                switchView('dashboard');
+                initializeDanielAIChat();
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+            }
+        });
+
+        // --- Daniel AI Chat Logic ---
+        function appendToChatLog(message, sender = 'ai', isProcessing = false) {
+            if (!chatLog) return;
+            const bubble = document.createElement('div');
+            bubble.classList.add('chat-bubble');
+            if (sender === 'user') {
+                bubble.classList.add('chat-bubble-user');
+                bubble.textContent = message;
+            } else {
+                bubble.classList.add('chat-bubble-ai');
+                if (isProcessing) {
+                    bubble.classList.add('processing-bubble');
+                    bubble.innerHTML = `<span class="spinner"></span><span>${message}</span>`;
+                } else {
+                    bubble.textContent = message;
+                }
+            }
+            chatLog.appendChild(bubble);
+            chatLog.scrollTop = chatLog.scrollHeight;
+            return bubble;
+        }
+
+        async function handleDanielAIChat(userInput) {
+            conversationHistory.push({ role: 'user', parts: [{ text: userInput }] });
+            appendToChatLog(userInput, 'user');
+            const processingBubble = appendToChatLog("Daniel is thinking...", 'ai', true);
+            
+            sendChatButton.disabled = true;
+            chatInput.disabled = true;
+
+            try {
+                const response = await fetch(ASK_DANIEL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        query: userInput,
+                        history: conversationHistory.slice(0, -1),
+                        view: currentView 
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'The AI is currently unavailable.');
+                
+                processingBubble.classList.remove('processing-bubble');
+                processingBubble.innerHTML = result.response;
+                conversationHistory.push({ role: 'model', parts: [{ text: result.response }] });
+
+            } catch (error) {
+                console.error("Error calling askDaniel function:", error);
+                processingBubble.classList.remove('processing-bubble');
+                processingBubble.textContent = `Sorry, I encountered an error: ${error.message}`;
+            } finally {
+                sendChatButton.disabled = false;
+                chatInput.disabled = false;
+                chatInput.focus();
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+        }
+
+        function initializeDanielAIChat() {
+            if (!chatLog || !chatInput || !sendChatButton) return;
+            
+            const initialMessage = "Hello! I'm Daniel, your AI assistant. I have access to all jobs, technicians, and inventory. How can I help you? Try asking 'How many jobs are unscheduled?' or 'Where is Khaled?'";
+            appendToChatLog(initialMessage);
+            conversationHistory.push({ role: 'model', parts: [{ text: initialMessage }] });
+
+            const submitQuery = () => {
+                const userInput = chatInput.value.trim();
+                if (userInput) {
+                    handleDanielAIChat(userInput);
+                    chatInput.value = '';
+                }
+            };
+
+            sendChatButton.addEventListener('click', submitQuery);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitQuery();
+            });
+        }
+    </script>
+</body>
+</html>
