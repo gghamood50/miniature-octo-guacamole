@@ -763,7 +763,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         // Using Firebase compat libraries for this implementation
-        import firebase from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js";
+        import * as firebase from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js";
         import "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js";
         import "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js";
 
@@ -1203,10 +1203,11 @@
 
         // --- Firebase Logic ---
         let db;
+        let auth;
         
         async function initializeTechnicians() {
-            const techCollection = collection(db, 'technicians');
-            const snapshot = await getDocs(techCollection);
+            const techCollection = firebase.firestore().collection('technicians');
+            const snapshot = await techCollection.get();
             if (snapshot.empty) {
                 const defaultTechnicians = [
                     { name: 'Ibaidallah', status: 'Online', currentLocation: '1100 S Flower St, Los Angeles, CA 90015', maxJobs: 8 },
@@ -1215,14 +1216,14 @@
                     { name: 'Omar', status: 'Offline', currentLocation: 'Home Base', maxJobs: 5 }
                 ];
                 for (const tech of defaultTechnicians) {
-                    await addDoc(techCollection, tech);
+                    await firebase.firestore().collection('technicians').add(tech);
                 }
             }
         }
 
         function listenForJobs() {
-            const jobsQuery = query(collection(db, "jobs"), orderBy("createdAt", "desc"));
-            onSnapshot(jobsQuery, (snapshot) => {
+            const jobsQuery = firebase.firestore().collection("jobs").orderBy("createdAt", "desc");
+            jobsQuery.onSnapshot((snapshot) => {
                 allJobsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderJobs(allJobsData);
                 // **FIXED**: Refresh dashboard and schedule view whenever jobs change
@@ -1242,7 +1243,7 @@
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
                 try {
-                    await firebase.auth().signOut();
+                    await auth.signOut();
                     // onAuthStateChanged will handle UI changes (redirect to login screen, clear data)
                     console.log("User signed out successfully.");
                 } catch (error) {
@@ -1254,8 +1255,8 @@
         }
 
         function listenForTechnicians() {
-            const techQuery = query(collection(db, "technicians"));
-            onSnapshot(techQuery, (snapshot) => {
+            const techQuery = firebase.firestore().collection("technicians");
+            techQuery.onSnapshot((snapshot) => {
                 const technicians = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allTechniciansData = technicians;
                 renderTechnicians(technicians);
@@ -1264,16 +1265,16 @@
         }
 
         async function initializeInventory() {
-            const inventoryCollection = collection(db, 'inventoryItems');
-            const snapshot = await getDocs(inventoryCollection);
+            const inventoryCollection = firebase.firestore().collection('inventoryItems');
+            const snapshot = await inventoryCollection.get();
             if (snapshot.empty) {
                 console.log("Inventory collection is empty. No default items will be added.");
             }
         }
 
         function listenForInventoryItems() {
-            const inventoryQuery = query(collection(db, "inventoryItems"), orderBy("createdAt", "desc"));
-            onSnapshot(inventoryQuery, (snapshot) => {
+            const inventoryQuery = firebase.firestore().collection("inventoryItems").orderBy("createdAt", "desc");
+            inventoryQuery.onSnapshot((snapshot) => {
                 const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderInventory(items);
             }, (error) => console.error("Error listening for inventory items:", error));
@@ -1281,9 +1282,9 @@
 
         // **FIXED**: New function to listen to all data needed for the dashboard
         function listenForDashboardData() {
-            const tripSheetsQuery = query(collection(db, "tripSheets"));
+            const tripSheetsQuery = firebase.firestore().collection("tripSheets");
             // We already have a listener for jobs, so we just need one for trip sheets
-            onSnapshot(tripSheetsQuery, (snapshot) => {
+            tripSheetsQuery.onSnapshot((snapshot) => {
                 const tripSheets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderDashboardStats(allJobsData, tripSheets);
             }, (error) => {
@@ -1296,14 +1297,14 @@
         editTechForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const techId = document.getElementById('modalTechId').value;
-            const techRef = doc(db, 'technicians', techId);
+            const techRef = firebase.firestore().doc(`technicians/${techId}`);
             const updatedData = {
                 status: document.getElementById('modalTechStatus').value,
                 currentLocation: document.getElementById('modalTechLocation').value,
                 maxJobs: parseInt(document.getElementById('modalTechMaxJobs').value, 10)
             };
             try {
-                await updateDoc(techRef, updatedData);
+                await techRef.update(updatedData);
                 closeEditTechModal();
             } catch (error) {
                 console.error("Error updating technician:", error);
@@ -1313,14 +1314,14 @@
         scheduleJobForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const jobId = document.getElementById('modalScheduleJobId').value;
-            const jobRef = doc(db, 'jobs', jobId);
+            const jobRef = firebase.firestore().doc(`jobs/${jobId}`);
             const updatedData = {
                 status: 'Scheduled',
                 scheduledDate: document.getElementById('modalJobDate').value,
                 timeSlot: document.getElementById('modalJobTimeSlot').value
             };
             try {
-                await updateDoc(jobRef, updatedData);
+                await jobRef.update(updatedData);
                 closeScheduleJobModal();
             } catch (error) {
                 console.error("Error scheduling job:", error);
@@ -1406,17 +1407,17 @@
 
             try {
                 if (partEditId) {
-                    const partRef = doc(db, 'inventoryItems', partEditId);
-                    await updateDoc(partRef, partData);
+                    const partRef = firebase.firestore().doc(`inventoryItems/${partEditId}`);
+                    await partRef.update(partData);
                 } else {
-                    const skuQuery = query(collection(db, "inventoryItems"), where("sku", "==", partData.sku));
-                    const skuSnapshot = await getDocs(skuQuery);
+                    const skuQuery = firebase.firestore().collection("inventoryItems").where("sku", "==", partData.sku);
+                    const skuSnapshot = await skuQuery.get();
                     if (!skuSnapshot.empty) {
                         alert(`Error: SKU "${partData.sku}" already exists. Please use a unique SKU.`);
                         return;
                     }
-                    partData.createdAt = serverTimestamp();
-                    await addDoc(collection(db, 'inventoryItems'), partData);
+                    partData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await firebase.firestore().collection('inventoryItems').add(partData);
                 }
                 closeAddPartModal();
             } catch (error) {
@@ -1465,18 +1466,18 @@
             }
             
             const newStock = itemToUpdate.currentStock - quantityUsed;
-            const partRef = doc(db, 'inventoryItems', itemToUpdate.id);
+            const partRef = firebase.firestore().doc(`inventoryItems/${itemToUpdate.id}`);
 
             try {
-                await updateDoc(partRef, { currentStock: newStock });
+                await partRef.update({ currentStock: newStock });
                 
-                await addDoc(collection(db, 'inventoryUsageLog'), {
+                await firebase.firestore().collection('inventoryUsageLog').add({
                     sku: skuToLog,
                     partName: itemToUpdate.partName,
                     quantityUsed: quantityUsed,
                     technicianId: technicianId, 
                     jobId: jobId || null,
-                    loggedAt: serverTimestamp()
+                    loggedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 closeLogPartUsageModal();
@@ -1499,10 +1500,10 @@
                     issue: document.getElementById('jobIssue').value,
                     phone: document.getElementById('jobPhone').value,
                     status: 'Needs Scheduling',
-                    createdAt: serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 try {
-                    await addDoc(collection(db, 'jobs'), jobData);
+                    await firebase.firestore().collection('jobs').add(jobData);
                     addJobModal.style.display = 'none';
                     newJobForm.reset();
                 } catch (error) {
@@ -1576,7 +1577,7 @@
             approveTripSheetsBtn.innerHTML = `<span class="material-icons-outlined animate-spin">sync</span>Approving...`;
 
             try {
-                const batch = writeBatch(db);
+                const batch = firebase.firestore().batch();
                 const jobsToUpdate = new Set();
                 
                 currentTripSheets.forEach(sheet => {
@@ -1590,7 +1591,7 @@
                 
                 if (jobsToUpdate.size > 0) {
                     jobsToUpdate.forEach(jobId => {
-                         const jobRef = doc(db, 'jobs', jobId);
+                         const jobRef = firebase.firestore().doc(`jobs/${jobId}`);
                          batch.update(jobRef, { status: 'Awaiting completion' });
                     });
                     await batch.commit();
@@ -1619,8 +1620,8 @@
             if (currentTripSheetListener) {
                 currentTripSheetListener(); 
             }
-            const tripSheetQuery = query(collection(db, "tripSheets"), where("date", "==", dateString));
-            currentTripSheetListener = onSnapshot(tripSheetQuery, (snapshot) => {
+            const tripSheetQuery = firebase.firestore().collection("tripSheets").where("date", "==", dateString);
+            currentTripSheetListener = tripSheetQuery.onSnapshot((snapshot) => {
                 const sheets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 if (currentView === 'schedule' && tripSheetDateInput.value === dateString) {
                     renderTripSheets(sheets, dateString);
@@ -1647,7 +1648,7 @@
                 if (!firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
                 }
-                const auth = firebase.auth();
+                auth = firebase.auth();
                 db = firebase.firestore();
                 console.log("Firebase Initialized (Compat).");
 
@@ -1765,7 +1766,7 @@
                 if (loginErrorMessage) loginErrorMessage.textContent = ''; // Clear previous errors
 
                 try {
-                    await firebase.auth().signInWithEmailAndPassword(email, password);
+                    await auth.signInWithEmailAndPassword(email, password);
                     // onAuthStateChanged will handle the UI changes upon successful login
                     console.log("Login successful for:", email);
                     loginForm.reset(); // Clear form fields
