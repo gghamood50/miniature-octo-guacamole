@@ -441,6 +441,22 @@ function showWorkerJobDetails(job) {
         </div>
     `;
     workerTodaysRouteEl.innerHTML = detailsHTML;
+
+    // Add event listener for the back button
+    const backBtn = document.getElementById('backToWorkerJobListBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            renderWorkerPwaView(currentWorkerAssignedJobs, currentWorkerTechnicianName);
+        });
+    }
+
+    const createInvoiceBtn = document.getElementById('createInvoiceBtn');
+    if(createInvoiceBtn) {
+        createInvoiceBtn.addEventListener('click', () => {
+            const jobId = createInvoiceBtn.dataset.id;
+            showInvoiceScreen(jobId);
+        });
+    }
 }
 
 
@@ -653,6 +669,7 @@ function listenForWorkerJobs(technicianId, technicianName) {
 
     workerJobsListener = jobsQuery.onSnapshot((snapshot) => {
         const assignedJobs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allJobsData = assignedJobs;
         renderWorkerPwaView(assignedJobs, technicianName);
     }, (error) => {
         console.error(`Error listening for jobs for technician ${technicianId}:`, error);
@@ -857,6 +874,19 @@ document.addEventListener('DOMContentLoaded', () => {
             showInvoiceScreen(jobId);
         }
     });
+
+    if (workerTodaysRouteEl) {
+        workerTodaysRouteEl.addEventListener('click', (event) => {
+            const jobItem = event.target.closest('.worker-job-item');
+            if (jobItem) {
+                const jobId = jobItem.dataset.id;
+                const jobData = currentWorkerAssignedJobs.find(j => j.id === jobId);
+                if (jobData) {
+                    showWorkerJobDetails(jobData);
+                }
+            }
+        });
+    }
     
     // Close modals on outside click
     window.addEventListener('click', (event) => {
@@ -1227,4 +1257,32 @@ function initializeDanielAIChat() {
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') submitQuery();
     });
+}
+
+function showInvoiceScreen(jobId) {
+    const job = allJobsData.find(j => j.id === jobId);
+    if (!job) {
+        console.error("Job not found for invoice creation:", jobId);
+        alert("Could not find the job details to create an invoice.");
+        return;
+    }
+
+    // Hide other views
+    if (layoutContainer) layoutContainer.style.display = 'none';
+    if (workerPwaView) workerPwaView.classList.add('hidden');
+    
+    // Show the invoice container
+    const invoiceContainer = document.getElementById('invoiceScreenContainer');
+    if (invoiceContainer) {
+        invoiceContainer.classList.remove('hidden');
+        invoiceContainer.style.display = 'block';
+    }
+
+    // Populate invoice form fields
+    // (This assumes you have a separate invoice.js file or logic to handle this)
+    if (window.populateInvoiceForm) {
+        window.populateInvoiceForm(job);
+    } else {
+        console.warn("`populateInvoiceForm` function not found. Invoice form will be blank.");
+    }
 }
