@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <!-- Login Screen -->
@@ -374,6 +375,216 @@
         </div>
     </div>
 
+    <!-- Invoice Screen Container -->
+    <div id="invoiceScreenContainer" class="hidden">
+        <div id="invoiceFormScreen" class="page">
+            <div class="page-header">
+                <button id="backToCurrentHomeBtn" class="btn-back"><i class="fas fa-chevron-left"></i> Home</button>
+                <h1 id="invoiceFormTitle">New Invoice</h1>
+                <span class="header-spacer"></span>
+            </div>
+
+            <div class="invoice-form-content">
+                <form id="invoiceForm" class="space-y-5">
+                    <div class="card">
+                        <h2 class="text-lg font-semibold mb-3">Invoice Details</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="invoiceNumberDisplay" class="form-label">Invoice #</label>
+                                <input type="text" id="invoiceNumberDisplay" name="invoiceNumberDisplay" class="form-input bg-gray-100 cursor-not-allowed" readonly placeholder="Loading next...">
+                            </div>
+                            <div>
+                                <label for="invoiceDate" class="form-label">Date</label>
+                                <input type="date" id="invoiceDate" name="invoiceDate" class="form-input" placeholder="YYYY-MM-DD" required>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="poNumber" class="form-label">Dispatch #</label>
+                                <input type="text" id="poNumber" name="poNumber" class="form-input" placeholder="Optional P.O. Number">
+                            </div>
+                            <div id="countyTaxRadioGroup" class="sm:col-span-2">
+                                <label class="form-label mb-1">County Tax:</label>
+                                <div class="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-y-2 gap-x-4">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="countyTax" value="Orange County" data-rate="7.75" class="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                                        <span class="ml-2 text-sm text-gray-700">Orange County (7.75%)</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="countyTax" value="LA 1" data-rate="9.75" class="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                                        <span class="ml-2 text-sm text-gray-700">LA 1 (9.75%)</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="countyTax" value="LA 2" data-rate="10.75" class="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                                        <span class="ml-2 text-sm text-gray-700">LA 2 (10.75%)</span>
+                                    </label>
+                                     <label class="flex items-center">
+                                        <input type="radio" name="countyTax" value="Other" data-rate="0" class="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                                        <span class="ml-2 text-sm text-gray-700">Other (Custom)</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="customTaxArea" class="hidden sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                                <div>
+                                    <label for="customAreaName" class="form-label">Custom Area Name</label>
+                                    <input type="text" id="customAreaName" name="customAreaName" class="form-input" placeholder="e.g., San Diego">
+                                </div>
+                                <div>
+                                    <label for="customTaxRate" class="form-label">Custom Tax Rate (%)</label>
+                                    <input type="number" id="customTaxRate" name="customTaxRate" class="form-input" placeholder="e.g., 8.25" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="card">
+                        <h2 class="text-lg font-semibold mb-3">Plan & Warranty</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="planType" class="form-label">Plan Type</label>
+                                <input type="text" id="planType" name="planType" class="form-input" placeholder="e.g., Basic, Premium">
+                            </div>
+                            <div>
+                                <label for="warrantyName" class="form-label">Warranty Provider</label>
+                                <input type="text" id="warrantyName" name="warrantyName" class="form-input" placeholder="e.g., 1-Year Parts">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2 class="text-lg font-semibold mb-3">Customer Information</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="customerName" class="form-label">Name</label>
+                                <input type="text" id="customerName" name="customerName" class="form-input" placeholder="Customer's full name" required>
+                            </div>
+                            <div>
+                                <label for="customerPhone" class="form-label">Phone</label>
+                                <input type="tel" id="customerPhone" name="customerPhone" class="form-input" placeholder="(XXX) XXX-XXXX">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="customerEmail" class="form-label">Email</label>
+                                <input type="email" id="customerEmail" name="customerEmail" class="form-input" placeholder="customer@example.com" required>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="customerAddress" class="form-label">Address</label>
+                            <input type="text" id="customerAddress" name="customerAddress" class="form-input" placeholder="Street, City, State, Zip">
+                        </div>
+                        <div class="mt-4">
+                            <label for="jobAddress" class="form-label">Job Address (if different)</label>
+                            <input type="text" id="jobAddress" name="jobAddress" class="form-input" placeholder="Street, City, State, Zip">
+                        </div>
+                        <div class="mt-4">
+                            <label for="typeOfEquipment" class="form-label">Type of Equipment</label>
+                            <textarea id="typeOfEquipment" name="typeOfEquipment" rows="2" class="form-input" placeholder="e.g., Garage Door Opener, Springs"></textarea>
+                        </div>
+                        <div class="mt-4">
+                            <label for="jobDescription" class="form-label">Job Description</label>
+                            <textarea id="jobDescription" name="jobDescription" rows="3" class="form-input" placeholder="Describe the work performed..."></textarea>
+                        </div>
+                        <div class="mt-4">
+                            <label for="recommendations" class="form-label">Recommendations</label>
+                            <textarea id="recommendations" name="recommendations" rows="3" class="form-input" placeholder="Enter any recommendations..."></textarea>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2 class="text-lg font-semibold mb-3">Items / Services</h2>
+                        <div id="lineItemsContainer" class="space-y-3"></div>
+                        <button type="button" id="addItemBtn" class="btn btn-secondary mt-3 text-sm py-2 px-3">Add Item</button>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="text-lg font-semibold mb-3">Non-Covered Items</h2>
+                        <textarea id="nonCoveredItemsText" name="nonCoveredItemsText" rows="3" class="form-input" placeholder="Enter any non-covered items or services..."></textarea>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="text-lg font-semibold mb-3">Payment Method</h2>
+                        <div id="paymentMethodRadioGroup" class="payment-method-group">
+                            <label class="flex items-center">
+                                <input type="radio" name="paymentMethod" value="Cash" required class="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                                <span class="ml-2 text-sm text-gray-700">Cash</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="paymentMethod" value="Credit/Debit Card" class="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                                <span class="ml-2 text-sm text-gray-700">Credit/Debit Card</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="paymentMethod" value="Cheque" class="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                                <span class="ml-2 text-sm text-gray-700">Cheque</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="paymentMethod" value="No Payment" required class="form-radio h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500">
+                                <span class="ml-2 text-sm text-gray-700">No Payment</span>
+                            </label>
+                        </div>
+                        <div id="chequeNumberArea" class="hidden mt-4">
+                            <label for="chequeNumber" class="form-label">Cheque #</label>
+                            <input type="text" id="chequeNumber" name="chequeNumber" class="form-input" placeholder="Enter cheque number">
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="text-lg font-semibold mb-3">Summary</h2>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="form-label">Labour Costs($):</span>
+                                <input type="number" id="labor" name="labor" class="form-input text-right" value="0" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                                <div>
+                                    <label for="serviceCall" class="form-label">Service Call ($):</label>
+                                    <input type="number" id="serviceCall" name="serviceCall" class="form-input text-right" value="85" min="0" step="0.01" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <label for="salesTaxRate" class="form-label">Tax rate(%):</label>
+                                <input type="number" id="salesTaxRate" name="salesTaxRate" class="form-input text-right bg-gray-100 cursor-not-allowed" value="0.00" min="0" step="0.01" readonly>
+                            </div>
+                            <hr class="my-3 border-gray-300">
+                            <div class="flex justify-between font-bold text-lg">
+                                <span style="color: var(--color-darkest);">TOTAL:</span>
+                                <span id="totalDisplay" style="color: var(--color-accent);">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="termsAndConditionsSection" class="card">
+                        <h2 class="text-lg font-semibold mb-2">Terms & Conditions</h2>
+                        <div class="terms-text-container p-2 border border-gray-200 rounded-md bg-gray-50 text-xs text-gray-600">
+                            <p>Payment due upon receipt of invoice. A service charge of $5.00 or 1.5% monthly (whichever is greater) will be charged on all balances over 15 days from date of invoice.</p>
+                            <p class="mt-1">Service and Parts Warranty: All new parts described in the invoice are covered by MANUFACTURER'S warranty. Safeway Garage Doors agrees to supply said in-warranty parts for one year at no charge. Labor warranty on SERVICE CALLS is 30 Days on same problem.</p>
+                        </div>
+                        <p class="mt-2 text-red-600 font-bold text-sm text-center">By signing, you agree to the terms & conditions.</p>
+                    </div>
+
+                    <div class="card" id="signatureSection">
+                        <h2 class="text-lg font-semibold mb-3">Customer Signature</h2>
+                        <div id="signatureLoadingMessage" class="text-sm text-gray-500 italic hidden mb-2">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>Wait, E-signature is loading...
+                        </div>
+                        <div id="signatureDisplayArea">
+                            <img id="previewSignatureImg" src="#" alt="Signature Preview" class="hidden">
+                            <div class="signature-pad-container">
+                                <canvas id="signatureCanvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="signature-pad-actions mt-2">
+                            <button type="button" id="clearSignatureBtn" class="btn btn-secondary btn-sm">Clear Signature</button>
+                            <button type="button" id="confirmSignatureBtn" class="btn btn-primary btn-sm">Confirm Signature</button>
+                        </div>
+                        <div id="signedBySection" class="mt-2 hidden">
+                            <p class="text-sm">Signed by: <span id="signedByName" class="font-medium"></span> (Confirmed)</p>
+                        </div>
+                    </div>
+
+                    <div class="scroll-spacer" style="height: 100px;"></div>
+                </form>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="clearFormBtn" class="btn btn-secondary">Clear Form</button>
+                <button type="button" id="saveInvoiceBtn" class="btn btn-primary">Save Invoice</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modals -->
     <div id="addJobModal" class="modal">
         <div class="modal-content">
@@ -515,6 +726,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <script src="app.js"></script>
+    <script src="invoice.js"></script>
 </body>
 </html>
