@@ -425,27 +425,102 @@ function renderWorkerPwaView(jobs, technicianName) {
 // --- Function to show detailed job view for worker ---
 function showWorkerJobDetails(job) {
     if (!job) return;
-    const detailsHTML = `
-        <div class="p-4 bg-white">
-            <button id="backToWorkerJobListBtn" class="mb-4 flex items-center text-sm text-[#0c7ff2] hover:underline">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256" class="mr-1">
-                    <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
-                </svg>
-                Back to Job List
-            </button>
-            <div class="mt-6 px-4 py-3 border-t border-slate-200 space-y-3">
-                <button id="createInvoiceBtn" data-id="${job.id}" class="w-full flex items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-medium">
-                    <span class="truncate">Create Invoice</span>
-                </button>
-            </div>
+
+    // Hide header elements
+    if (workerCurrentDateEl) workerCurrentDateEl.style.display = 'none';
+    const todaysRouteHeading = document.getElementById('todaysRouteHeading');
+    if (todaysRouteHeading) todaysRouteHeading.style.display = 'none';
+    
+    // Main container styling
+    if (workerNameEl) {
+      workerNameEl.innerHTML = `
+        <div class="flex items-center bg-white p-0 pb-2 justify-between">
+          <div class="text-[#111418] flex size-12 shrink-0 items-center" data-icon="ArrowLeft" data-size="24px" data-weight="regular" id="backToWorkerJobListBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+              <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+            </svg>
+          </div>
+          <h2 class="text-[#111418] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">${job.customer}</h2>
+          <div class="flex w-12 items-center justify-end"></div>
         </div>
+      `;
+    }
+    workerTodaysRouteEl.innerHTML = `
+    <div>
+        <p class="text-[#60758a] text-base font-bold leading-normal tracking-[0.015em] shrink-0 text-center">Dispatch #${job.dispatchOrPoNumber}</p>
+        <h3 class="text-[#111418] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Customer Information</h3>
+        <div class="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2">
+          <div class="text-[#111418] flex items-center justify-center rounded-lg bg-[#f0f2f5] shrink-0 size-12" data-icon="MapPin" data-size="24px" data-weight="regular">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+              <path
+                d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"
+              ></path>
+            </svg>
+          </div>
+          <div class="flex flex-col justify-center">
+            <p class="text-[#111418] text-base font-medium leading-normal line-clamp-1">${job.customer}</p>
+            <p class="text-[#60758a] text-sm font-normal leading-normal line-clamp-2">${job.address}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 bg-white px-4 min-h-14">
+          <div class="text-[#111418] flex items-center justify-center rounded-lg bg-[#f0f2f5] shrink-0 size-10" data-icon="Phone" data-size="24px" data-weight="regular">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+              <path
+                d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"
+              ></path>
+            </svg>
+          </div>
+          <p class="text-[#111418] text-base font-normal leading-normal flex-1 truncate">${job.phone}</p>
+        </div>
+        <h3 class="text-[#111418] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Job Description</h3>
+        <div class="p-4">
+          <div
+            class="bg-cover bg-center flex flex-col items-stretch justify-end rounded-lg pt-[132px]"
+            style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuAnoLfzaQ-gNxaBrMargt4ICzWZYHmg9DUhqW-Nl-F1FqVPk9xXLd5uMYx6Czsy70-bayIO-b76_wLsKCm_wlMfDbbph9Tk15Kc8mC_XP46qWfydpbMtwYcNM2oTwEu5tlIpYrVrpwadL9hq2KRmeYdU158YPk2z9kV2ZXEtXsD_E2rrRcBADn1l_yXJFT0IhaoShiEs5FP5wI66LN2YDopm8wgXCBux056jN_-P0jOONCxc6QLMFT3UQKXrMj_-mcFDB57g60UKzY");'
+          >
+            <div class="flex w-full items-end justify-between gap-4 p-4">
+              <div class="flex max-w-[440px] flex-1 flex-col gap-1">
+                <p class="text-white tracking-light text-2xl font-bold leading-tight max-w-[440px]">${job.issue}</p>
+                <p class="text-white text-base font-medium leading-normal">${job.issue}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-center">
+          <div class="flex flex-1 gap-3 max-w-[480px] flex-col items-stretch px-4 py-3">
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#0c7ff2] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
+            >
+              <span class="truncate">On My Way!</span>
+            </button>
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-bold leading-normal tracking-[0.015em] w-full"
+              id="createInvoiceBtn"
+            >
+              <span class="truncate">Create Invoice</span>
+            </button>
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-bold leading-normal tracking-[0.015em] w-full"
+            >
+              <span class="truncate">Reschedule</span>
+            </button>
+          </div>
+        </div>
+        <div class="h-5 bg-white"></div>
+      </div>
     `;
-    workerTodaysRouteEl.innerHTML = detailsHTML;
 
     // Add event listener for the back button
     const backBtn = document.getElementById('backToWorkerJobListBtn');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
+            // Restore header elements
+            if (workerNameEl) workerNameEl.textContent = `Hello, ${currentWorkerTechnicianName}`;
+            if (workerCurrentDateEl) workerCurrentDateEl.style.display = 'block';
+            const todaysRouteHeading = document.getElementById('todaysRouteHeading');
+            if (todaysRouteHeading) todaysRouteHeading.style.display = 'block';
             renderWorkerPwaView(currentWorkerAssignedJobs, currentWorkerTechnicianName);
         });
     }
@@ -453,7 +528,7 @@ function showWorkerJobDetails(job) {
     const createInvoiceBtn = document.getElementById('createInvoiceBtn');
     if(createInvoiceBtn) {
         createInvoiceBtn.addEventListener('click', () => {
-            const jobId = createInvoiceBtn.dataset.id;
+            const jobId = job.id;
             showInvoiceScreen(jobId);
         });
     }
