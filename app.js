@@ -1354,10 +1354,5 @@ function showInvoiceScreen(jobId) {
     }
 
     // Populate invoice form fields
-    // (This assumes you have a separate invoice.js file or logic to handle this)
-    if (window.populateInvoiceForm) {
-        window.populateInvoiceForm(job);
-    } else {
-        console.warn("`populateInvoiceForm` function not found. Invoice form will be blank.");
-    }
+    populateInvoiceForm(job);
 }
