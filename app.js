@@ -23,6 +23,9 @@ let currentTripSheetListener = null;
 let workerJobsListener = null; // Listener for the worker's specific jobs
 let currentWorkerAssignedJobs = []; // To store jobs for the current worker view
 let currentWorkerTechnicianName = ''; // To store current worker's name for view rendering
+let signaturePad = null;
+let confirmedSignatureDataURL = null;
+let isFormLocked = false; 
 
 // --- DOM Elements ---
 const jobsTableBody = document.getElementById('jobsTableBody');
@@ -91,6 +94,17 @@ const workerCurrentDateEl = document.getElementById('workerCurrentDate');
 const workerTodaysRouteEl = document.getElementById('workerTodaysRoute');
 const workerLogoutBtn = document.getElementById('workerLogoutBtn');
 
+// --- Invoice Form Elements ---
+const invoiceFormScreen = document.getElementById('invoiceFormScreen');
+const invoiceFormEl = document.getElementById('invoiceForm');
+const backToCurrentHomeBtn = document.getElementById('backToCurrentHomeBtn');
+const addItemBtn = document.getElementById('addItemBtn');
+const saveInvoiceBtn = document.getElementById('saveInvoiceBtn');
+const clearFormBtn = document.getElementById('clearFormBtn');
+const signatureCanvas = document.getElementById('signatureCanvas');
+const clearSignatureBtn = document.getElementById('clearSignatureBtn');
+const confirmSignatureBtn = document.getElementById('confirmSignatureBtn');
+
 
 // --- Render Functions ---
 function renderJobs(jobs) {
@@ -124,6 +138,11 @@ function renderJobs(jobs) {
         } else if (statusText === 'Completed') {
             statusClass = 'status-completed';
         }
+        const isAdmin = auth.currentUser && auth.currentUser.email === 'admin@safewayos2.app';
+        const actionsHtml = isAdmin
+            ? `<button class="btn-secondary-stitch schedule-job-btn" data-id="${job.id}">View/Schedule</button>`
+            : `<button class="btn-primary-stitch create-invoice-btn" data-id="${job.id}">Create Invoice</button>`;
+
         return `
             <tr>
                 <td class="font-medium text-slate-800">${job.customer || 'N/A'}</td>
@@ -131,7 +150,7 @@ function renderJobs(jobs) {
                 <td>${job.issue || 'N/A'}</td>
                 <td>${job.phone || 'N/A'}</td>
                 <td><span class="status-pill ${statusClass}">${statusText}</span></td>
-                <td><button class="btn-secondary-stitch schedule-job-btn" data-id="${job.id}">View/Schedule</button></td>
+                <td>${actionsHtml}</td>
             </tr>
         `;
     }).join('');
@@ -384,7 +403,7 @@ function renderWorkerPwaView(jobs, technicianName) {
     const sortedJobs = [...jobs].sort((a, b) => (timeSlotOrder[a.timeSlot] || 99) - (timeSlotOrder[b.timeSlot] || 99));
 
     workerTodaysRouteEl.innerHTML = sortedJobs.map(job => `
-        <div class="flex items-center gap-4 bg-white px-4 min-h-[72px] py-3 justify-between border-b border-slate-100 cursor-pointer hover:bg-slate-50 worker-job-item" data-job-id="${job.id}">
+        <div class="flex items-center gap-4 bg-white px-4 min-h-[72px] py-3 justify-between border-b border-slate-100 cursor-pointer hover:bg-slate-50 worker-job-item" data-id="${job.id}">
             <div class="flex items-center gap-4 overflow-hidden">
                 <div class="text-[#111418] flex items-center justify-center rounded-lg bg-[#f0f2f5] shrink-0 size-12">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"></path></svg>
@@ -401,29 +420,11 @@ function renderWorkerPwaView(jobs, technicianName) {
             </div>
         </div>
     `).join('');
-
-    // Add event listeners to the newly rendered job items
-    jobs.forEach(job => {
-        const jobItemElement = workerTodaysRouteEl.querySelector(`.worker-job-item[data-job-id="${job.id}"]`);
-        if (jobItemElement) {
-            jobItemElement.addEventListener('click', () => {
-                showWorkerJobDetails(job); // Pass the full job object
-            });
-        }
-    });
 }
 
 // --- Function to show detailed job view for worker ---
-function showWorkerJobDetails(job) { // Now expects the full job object
-    if (!job || !job.id) { // Check if job object is valid
-        console.error("Invalid job object passed to showWorkerJobDetails:", job);
-        workerTodaysRouteEl.innerHTML = `<p class="text-red-500 p-4">Error: Job details could not be loaded or job data is invalid.</p>`;
-        return;
-    }
-
-    // Helper to safely display data, showing 'N/A' if null or undefined
-    const displayValue = (value, prefix = '') => value ? `${prefix}${value}` : 'N/A';
-
+function showWorkerJobDetails(job) {
+    if (!job) return;
     const detailsHTML = `
         <div class="p-4 bg-white">
             <button id="backToWorkerJobListBtn" class="mb-4 flex items-center text-sm text-[#0c7ff2] hover:underline">
@@ -432,117 +433,14 @@ function showWorkerJobDetails(job) { // Now expects the full job object
                 </svg>
                 Back to Job List
             </button>
-
-            <div class="flex items-center bg-white p-4 pb-2 justify-between border-b border-slate-200">
-                <h2 class="text-[#111418] text-xl font-bold leading-tight tracking-[-0.015em] flex-1">${displayValue(job.customer)}</h2>
-                <p class="text-[#60758a] text-base font-bold leading-normal tracking-[0.015em] shrink-0">Dispatch #${displayValue(job.dispatchOrPoNumber)}</p>
-            </div>
-
-            <h3 class="text-[#111418] text-lg font-semibold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Customer Information</h3>
-            <div class="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2 border-b border-slate-100">
-                <div class="text-[#111418] flex items-center justify-center rounded-lg bg-[#f0f2f5] shrink-0 size-12">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"></path></svg>
-                </div>
-                <div class="flex flex-col justify-center">
-                    <p class="text-[#111418] text-base font-medium leading-normal">${displayValue(job.customer)}</p>
-                    <p class="text-[#60758a] text-sm font-normal leading-normal">${displayValue(job.address)}</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-4 bg-white px-4 min-h-14 py-2 border-b border-slate-100">
-                <div class="text-[#111418] flex items-center justify-center rounded-lg bg-[#f0f2f5] shrink-0 size-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"></path></svg>
-                </div>
-                <p class="text-[#111418] text-base font-normal leading-normal flex-1">${displayValue(job.phone)}</p>
-            </div>
-
-            <h3 class="text-[#111418] text-lg font-semibold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Job Details</h3>
-            <div class="p-4 border-b border-slate-100">
-                <p class="text-[#111418] text-base font-medium leading-normal">Issue Reported:</p>
-                <p class="text-[#60758a] text-sm font-normal leading-normal">${displayValue(job.issue)}</p>
-            </div>
-
-            <h3 class="text-[#111418] text-lg font-semibold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Warranty Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-                <div>
-                    <p class="text-[#111418] text-base font-medium leading-normal">Warranty Provider:</p>
-                    <p class="text-[#60758a] text-sm font-normal leading-normal">${displayValue(job.warrantyProvider)}</p>
-                </div>
-                <div>
-                    <p class="text-[#111418] text-base font-medium leading-normal">Warranty Plan:</p>
-                    <p class="text-[#60758a] text-sm font-normal leading-normal">${displayValue(job.planType)}</p>
-                </div>
-            </div>
             <div class="mt-6 px-4 py-3 border-t border-slate-200 space-y-3">
-                <button id="sendOnMyWayTextBtn_${job.id}" class="w-full flex items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#0c7ff2] text-white text-sm font-bold leading-normal tracking-[0.015em]">
-                    <span class="truncate">Send On My Way! text</span>
-                </button>
-                <button id="createInvoiceBtn_${job.id}" class="w-full flex items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-medium">
+                <button id="createInvoiceBtn" data-id="${job.id}" class="w-full flex items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-medium">
                     <span class="truncate">Create Invoice</span>
-                </button>
-                <button id="rescheduleBtn_${job.id}" class="w-full flex items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-medium">
-                    <span class="truncate">Reschedule</span>
                 </button>
             </div>
         </div>
     `;
-
     workerTodaysRouteEl.innerHTML = detailsHTML;
-
-    // Add event listener for the back button
-    const backButton = document.getElementById('backToWorkerJobListBtn');
-    if (backButton) {
-        backButton.addEventListener('click', () => {
-            // Re-render the job list using the stored jobs and technician name
-            if (currentWorkerAssignedJobs && currentWorkerAssignedJobs.length >= 0 && currentWorkerTechnicianName) { // Check if array exists
-                renderWorkerPwaView(currentWorkerAssignedJobs, currentWorkerTechnicianName);
-            } else {
-                // Fallback if stored data is missing (should ideally not happen if view was loaded correctly)
-                // Attempt to re-trigger the main listener for worker jobs if auth info is available
-                if (auth.currentUser && auth.currentUser.email) {
-                    const techEmail = auth.currentUser.email;
-                    const techNameFromEmail = techEmail.split('@')[0];
-                    const capitalizedTechName = techNameFromEmail.charAt(0).toUpperCase() + techNameFromEmail.slice(1);
-                    
-                    // Attempt to find technician ID from allTechniciansData (might not be populated for worker)
-                    // This part is still a bit risky if allTechniciansData is not available.
-                    // The best is to rely on currentWorkerAssignedJobs & currentWorkerTechnicianName
-                    const technicianInfo = allTechniciansData.find(t => t.name === capitalizedTechName);
-                    if (technicianInfo) {
-                         listenForWorkerJobs(technicianInfo.id, technicianInfo.name);
-                    } else {
-                        workerTodaysRouteEl.innerHTML = '<p class="p-4">Could not reload job list. Please try logging out and back in.</p>';
-                    }
-                } else {
-                     workerTodaysRouteEl.innerHTML = '<p class="p-4">Could not reload job list. Session may have expired.</p>';
-                }
-            }
-        });
-    }
-
-    // Add event listeners for action buttons
-    const sendOnMyWayTextBtn = document.getElementById(`sendOnMyWayTextBtn_${job.id}`);
-    if (sendOnMyWayTextBtn) {
-        sendOnMyWayTextBtn.addEventListener('click', () => {
-            console.log(`"Send On My Way! text" clicked for job ID: ${job.id}`);
-            // Placeholder: Add actual "Send On My Way! text" logic here
-        });
-    }
-
-    const createInvoiceBtn = document.getElementById(`createInvoiceBtn_${job.id}`);
-    if (createInvoiceBtn) {
-        createInvoiceBtn.addEventListener('click', () => {
-            console.log(`"Create Invoice" clicked for job ID: ${job.id}`);
-            // Placeholder: Add actual "Create Invoice" logic here
-        });
-    }
-
-    const rescheduleBtn = document.getElementById(`rescheduleBtn_${job.id}`);
-    if (rescheduleBtn) {
-        rescheduleBtn.addEventListener('click', () => {
-            console.log(`"Reschedule" clicked for job ID: ${job.id}`);
-            // Placeholder: Add actual "Reschedule" logic here
-        });
-    }
 }
 
 
@@ -742,9 +640,16 @@ function listenForWorkerJobs(technicianId, technicianName) {
     if (workerJobsListener) {
         workerJobsListener(); // Detach any previous listener
     }
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayDateString = `${year}-${month}-${day}`;
+
     const jobsQuery = firebase.firestore().collection("jobs")
         .where("assignedTechnicianId", "==", technicianId)
-        .where("status", "==", "Awaiting completion");
+        .where("status", "==", "Awaiting completion")
+        .where("scheduledDate", "==", todayDateString);
 
     workerJobsListener = jobsQuery.onSnapshot((snapshot) => {
         const assignedJobs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -947,6 +852,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const partData = inventoryItemsData.find(p => p.id === partId);
             if(partData) openAddPartModal(partData); 
         }
+        if (event.target.classList.contains('create-invoice-btn')) {
+            const jobId = event.target.dataset.id;
+            showInvoiceScreen(jobId);
+        }
     });
     
     // Close modals on outside click
@@ -1140,6 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     loginScreen.style.display = 'none';
                     workerPwaView.classList.add('hidden');
                     layoutContainer.style.display = 'flex';
+                    invoiceFormScreen.classList.add('hidden');
 
                     initializeTechnicians().then(() => {
                         listenForJobs();
@@ -1167,6 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         loginScreen.style.display = 'none';
                         layoutContainer.style.display = 'none';
                         workerPwaView.classList.remove('hidden');
+                        invoiceFormScreen.classList.add('hidden');
 
                         listenForWorkerJobs(technician.id, technician.name);
                     } else {
@@ -1179,6 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginScreen.style.display = 'flex';
                 layoutContainer.style.display = 'none';
                 workerPwaView.classList.add('hidden');
+                invoiceFormScreen.classList.add('hidden');
                 console.log("User signed out.");
 
                 // Clear data and listeners
