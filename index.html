@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Safeway OS - Garage Solutions</title>
     <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
-    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&family=Inter%3Awght%40400%3B500%3B700%3B900&family=Noto+Sans%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&family=Inter%3Awght%40400%3B500%3B700%3B900&family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&family=Space+Grotesk%3Awght%40400%3B500%3B700" onload="this.rel='stylesheet'" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Login Screen -->
     <div id="loginScreen" class="flex items-center justify-center min-h-screen bg-slate-100">
         <div class="p-8 bg-white shadow-xl rounded-lg w-full max-w-md">
             <div class="flex justify-center mb-6">
@@ -44,6 +45,7 @@
         </div>
     </div>
 
+    <!-- Main Admin Layout Container -->
     <div id="layoutContainer" class="relative flex size-full min-h-screen flex-col bg-slate-50 group/design-root overflow-x-hidden" style="display: none;">
         <div class="flex h-full grow flex-col">
             <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-10 py-4 shadow-sm sticky top-0 z-50">
@@ -74,7 +76,7 @@
                     <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="warranty">
                         <span class="material-icons-outlined text-xl">verified_user</span>Warranty
                     </a>
-                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors active" href="#" data-target="daniel">
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="daniel">
                         <span class="material-icons-outlined text-xl">smart_toy</span>Daniel (AI)
                     </a>
                     <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#" data-target="settings">
@@ -147,7 +149,7 @@
                         </div>
                     </section>
 
-                    <section id="jobs" class="content-section">
+                    <section id="jobs" class="content-section hidden">
                         <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
                             <div>
                                 <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Job Management</h1>
@@ -286,7 +288,7 @@
                             <p class="text-slate-600 mt-2">This page is currently under construction. Please check back later!</p>
                         </div>
                     </section>
-                    <section id="daniel" class="content-section bg-gradient-to-br from-slate-50 via-green-50 to-slate-50 p-0 m-0 flex flex-col" style="height: calc(100vh - 160px);"> 
+                    <section id="daniel" class="content-section hidden bg-gradient-to-br from-slate-50 via-green-50 to-slate-50 p-0 m-0 flex flex-col" style="height: calc(100vh - 160px);"> 
                         <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center px-6 pt-6 pb-2">
                              <div>
                                 <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Daniel - Your AI Assistant</h1>
@@ -323,29 +325,56 @@
                             </div>
                             <p class="text-xs text-slate-500 mt-1">Toggle to switch between light and dark themes for the application.</p>
                         </div>
-                        
                     </section>
-
-                    <section id="workerHomeScreen" class="content-section hidden">
-                        <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
-                            <div>
-                                <h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Worker Dashboard</h1>
-                                <p class="text-slate-600 text-base font-normal leading-normal">Welcome to your dashboard.</p>
-                            </div>
-                        </div>
-                        <div class="mt-6 content-card-stitch">
-                            <h3 class="text-slate-800 text-lg font-semibold leading-normal mb-4">Quick Actions</h3>
-                            <p>Worker-specific content and actions will go here.</p>
-                            <p>For example, a list of assigned jobs for the day.</p>
-                        </div>
-                    </section>
-
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- Add Job Modal -->
+    <!-- Worker PWA View -->
+    <div id="workerPwaView" class="hidden relative flex size-full min-h-screen flex-col bg-white justify-between group/design-root overflow-x-hidden" style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
+        <div>
+            <div class="flex items-center bg-white p-4 pb-2 justify-between sticky top-0">
+                <div class="flex w-12"></div>
+                <h2 id="workerName" class="text-[#111418] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Hello, Worker</h2>
+                <div class="flex w-12 items-center justify-end">
+                    <button id="workerLogoutBtn" class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-transparent text-[#111418] gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+                        <div class="text-[#111418]" data-icon="SignOut" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H56V200h48A8,8,0,0,1,112,216Zm115.51-99.51-48-48a8,8,0,0,0-11.32,11.32L196.69,108H104a8,8,0,0,0,0,16h92.69l-28.5,28.49a8,8,0,0,0,11.32,11.32l48-48A8,8,0,0,0,227.51,116.49Z"></path></svg>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <p id="workerCurrentDate" class="text-[#60758a] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">Monday, July 22</p>
+            <h2 class="text-[#111418] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Today's Route</h2>
+            
+            <div id="workerTodaysRoute" class="flex flex-col">
+                <!-- Jobs will be dynamically inserted here by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="sticky bottom-0">
+            <div class="flex gap-2 border-t border-[#f0f2f5] bg-white px-4 pb-3 pt-2">
+                <a class="just flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#111418]" href="#">
+                    <div class="text-[#111418] flex h-8 items-center justify-center" data-icon="House" data-size="24px" data-weight="fill">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path></svg>
+                    </div>
+                    <p class="text-[#111418] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+                </a>
+                
+                <a class="just flex flex-1 flex-col items-center justify-end gap-1 text-[#60758a]" href="#">
+                    <div class="text-[#60758a] flex h-8 items-center justify-center" data-icon="Receipt" data-size="24px" data-weight="regular">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M72,104a8,8,0,0,1,8-8h96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,104Zm8,40h96a8,8,0,0,0,0-16H80a8,8,0,0,0,0,16ZM232,56V208a8,8,0,0,1-11.58,7.15L192,200.94l-28.42,14.21a8,8,0,0,1-7.16,0L128,200.94,99.58,215.15a8,8,0,0,1-7.16,0L64,200.94,35.58,215.15A8,8,0,0,1,24,208V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Zm-16,0H40V195.06l20.42-10.22a8,8,0,0,1,7.16,0L96,199.06l28.42-14.22a8,8,0,0,1,7.16,0L160,199.06l28.42-14.22a8,8,0,0,1,7.16,0L216,195.06Z"></path></svg>
+                    </div>
+                    <p class="text-[#60758a] text-xs font-medium leading-normal tracking-[0.015em]">Invoices</p>
+                </a>
+                
+            </div>
+            <div class="h-5 bg-white"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
     <div id="addJobModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -376,8 +405,6 @@
             </form>
         </div>
     </div>
-
-    <!-- Technician Edit Modal -->
     <div id="editTechnicianModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -408,12 +435,11 @@
             </form>
         </div>
     </div>
-    
-    <!-- Add Part Modal -->
     <div id="addPartModal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h2>Add New Inventory Part</h2><span class="close-button" id="closeAddPartModal">&times;</span></div>
             <form id="newPartForm" class="space-y-4">
+                <input type="hidden" id="partEditId">
                 <div><label for="partName" class="form-label">Part Name</label><input type="text" id="partName" class="form-input" placeholder="e.g., Torsion Spring 2-inch" required></div>
                 <div><label for="partSKU" class="form-label">SKU / Part Number</label><input type="text" id="partSKU" class="form-input" placeholder="e.g., TS-002-HD" required></div>
                 <div><label for="partCategory" class="form-label">Category</label><input type="text" id="partCategory" class="form-input" placeholder="e.g., Springs, Cables, Openers"></div>
@@ -423,13 +449,10 @@
                     <div><label for="partReorderLevel" class="form-label">Reorder Level</label><input type="number" id="partReorderLevel" class="form-input" value="5" min="0" required></div>
                 </div>
                 <div><label for="partUnitCost" class="form-label">Unit Cost (USD)</label><input type="number" step="0.01" id="partUnitCost" class="form-input" placeholder="e.g., 25.50" min="0" required></div>
-                <input type="hidden" id="partEditId"> <!-- For editing existing parts -->
                 <div class="flex justify-end space-x-3 pt-2"><button type="button" id="cancelAddPart" class="btn-secondary-stitch bg-slate-200 text-slate-700 border-slate-300 hover:bg-slate-300">Cancel</button><button type="submit" id="savePartButton" class="btn-primary-stitch">Add Part</button></div>
             </form>
         </div>
     </div>
-    
-    <!-- Log Part Usage Modal -->
     <div id="logPartUsageModal" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h2>Log Part Usage</h2><span class="close-button" id="closeLogPartUsageModal">&times;</span></div>
@@ -443,7 +466,6 @@
                 <div>
                     <label for="usageTechnician" class="form-label">Technician</label>
                     <select id="usageTechnician" class="form-input" required>
-                        <!-- Technician options will be populated by JavaScript -->
                         <option value="">Select Technician</option>
                     </select>
                 </div>
@@ -452,8 +474,6 @@
             </form>
         </div>
     </div>
-
-    <!-- Schedule Job Modal -->
     <div id="scheduleJobModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -491,9 +511,7 @@
         </div>
     </div>
 
-
     <!-- Firebase SDK -->
-    <!-- FIXED: Load Firebase using standard script tags instead of ES modules -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
