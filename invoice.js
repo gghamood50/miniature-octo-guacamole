@@ -232,9 +232,13 @@ function populateInvoiceForm(job) {
     document.getElementById('customerAddress').value = job.address || '';
     document.getElementById('customerPhone').value = job.phone || '';
     document.getElementById('jobAddress').value = job.address || ''; // Assuming job address is same as customer address
-    document.getElementById('jobDescription').value = job.issue || '';
+    
     document.getElementById('poNumber').value = job.dispatchOrPoNumber || '';
     
+    // Auto-fill warranty details
+    document.getElementById('planType').value = job.planType || '';
+    document.getElementById('warrantyName').value = job.warrantyName || '';
+
     // Set other fields to default/initial states
     setInitialDate();
     if (salesTaxRateInput) salesTaxRateInput.value = "0.00";
@@ -274,6 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const chequeNumberInput = document.getElementById('chequeNumber');
     const saveInvoiceBtn = document.getElementById('saveInvoiceBtn');
     const backToCurrentHomeBtn = document.getElementById('backToCurrentHomeBtn');
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
     
     const clearSignatureBtn = document.getElementById('clearSignatureBtn');
     const confirmSignatureBtn = document.getElementById('confirmSignatureBtn');
@@ -422,6 +427,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if(window.renderWorkerPwaView) window.renderWorkerPwaView(currentWorkerAssignedJobs, currentWorkerTechnicianName);
         }
     });
+
+    if (downloadPdfBtn) {
+        downloadPdfBtn.addEventListener('click', () => {
+            const invoiceData = collectInvoiceData("PREVIEW"); // Use a placeholder for invoice number
+            generateInvoicePDF(invoiceData, 'preview');
+        });
+    }
 
 });
 
