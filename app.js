@@ -1738,40 +1738,39 @@ function showInvoiceScreen(jobId) {
     populateInvoiceForm(job);
 }
 
-function showWorkerHomeScreen() {
-    console.log("showWorkerHomeScreen called");
-    currentAppView = 'worker'; 
-    showPage('workerHomeScreen');
-    loadSavedInvoicesToHome(); 
-    if(loggedInUserDisplay && currentUser) {
-         const userDisplayName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
-         loggedInUserDisplay.textContent = `${userDisplayName} (Worker)`;
-    }
-}
+function showPage(pageId) {
+    const allPages = [loginScreen, workerHomeScreen, adminHomeScreen, adminInvoicesScreen, adminWorkersScreen, settingsScreen, invoiceFormScreen, adminInvoiceWorkerSelectScreen];
+    const modalElements = [invoiceViewModal, workerDetailModal, confirmationModal];
+    const isTargetModal = modalElements.some(m => m && m.id === pageId);
 
-function showAdminHomeScreen() {
-    console.log("showAdminHomeScreen called");
-    currentAppView = 'admin'; 
-    currentAdminScreen = 'dashboard';
-    showPage('adminHomeScreen');
-    loadAdminDashboardData();
-    updateAdminNavActiveState('adminNavHomeBtn');
-    if(loggedInUserDisplay && currentUser) {
-        const userDisplayName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
-        loggedInUserDisplay.textContent = `${userDisplayName} (Admin)`;
-    }
-}
+    if (isTargetModal) {
+        modalElements.forEach(modal => {
+            if (modal && modal.id === pageId) {
+                modal.classList.remove('hidden');
+            }
+        });
+        if (adminBottomNav && pageId !== 'loginScreen') {
+            adminBottomNav.classList.add('hidden');
+        }
+    } else {
+        allPages.forEach(page => {
+            if (page && page.id === pageId) {
+                page.classList.remove('hidden');
+            } else if (page) {
+                page.classList.add('hidden');
+            }
+        });
+        modalElements.forEach(modal => {
+            if (modal) modal.classList.add('hidden');
+        });
 
-function showSettingsScreen() {
-    console.log(`showSettingsScreen called. currentAppView before setting previous: ${currentAppView}`);
-    previousAppView = currentAppView; 
-    console.log(`  previousAppView is now: ${previousAppView}, currentAdminScreen: ${currentAdminScreen}`);
-    showPage('settingsScreen');
-    if (currentUser && currentUser.type === 'admin') { 
-        updateAdminNavActiveState('adminNavSettingsBtn');
-    }
-    if(loggedInUserDisplay && currentUser) {
-         const userDisplayName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
-         loggedInUserDisplay.textContent = `${userDisplayName} (${currentAppView || 'User'})`; 
+        if (adminBottomNav) {
+            if (currentAppView === 'admin' && (pageId === 'adminHomeScreen' || pageId === 'adminInvoicesScreen' || pageId === 'adminWorkersScreen' || pageId === 'adminInvoiceWorkerSelectScreen')) {
+                adminBottomNav.classList.remove('hidden');
+            } else {
+                adminBottomNav.classList.add('hidden');
+            }
+        }
+        if (!isTargetModal) window.scrollTo(0, 0);
     }
 }
