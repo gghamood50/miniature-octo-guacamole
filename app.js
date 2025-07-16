@@ -472,6 +472,18 @@ function showWorkerJobDetails(job) {
           </div>
           <p class="text-[#111418] text-base font-normal leading-normal flex-1 truncate">${job.phone}</p>
         </div>
+        <div class="flex items-center gap-4 bg-white px-4 min-h-14">
+            <div class="text-[#111418] flex items-center justify-center rounded-lg bg-[#f0f2f5] shrink-0 size-10" data-icon="ShieldCheck" data-size="24px" data-weight="regular">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M223.49,68.76,144,36.22a16,16,0,0,0-14.7,0l-80,32.54A16,16,0,0,0,40,84.15V152a92.24,92.24,0,0,0,48.24,81.33,16,16,0,0,0,15.52,0A92.24,92.24,0,0,0,216,152V84.15A16,16,0,0,0,223.49,68.76ZM128,216c-33.15-18.47-48-50.84-48-70.27V91.13l48-19.49,48,19.49v54.6C176,165.16,161.15,197.53,128,216Zm-8.49-84.49,32-32a8,8,0,0,1,11.32,11.32L128,145.66l-16.49-16.5a8,8,0,0,1,11.32-11.32Z"></path></svg>
+            </div>
+            <p class="text-[#111418] text-base font-normal leading-normal flex-1 truncate">${job.warrantyProvider || 'N/A'}</p>
+        </div>
+        <div class="flex items-center gap-4 bg-white px-4 min-h-14">
+            <div class="text-[#111418] flex items-center justify-center rounded-lg bg-[#f0f2f5] shrink-0 size-10" data-icon="Note" data-size="24px" data-weight="regular">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM56,216V40h88V88a8,8,0,0,0,8,8h48V216Z"></path></svg>
+            </div>
+            <p class="text-[#111418] text-base font-normal leading-normal flex-1 truncate">${job.planType || 'N/A'}</p>
+        </div>
         <h3 class="text-[#111418] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Job Description</h3>
         <div class="p-4">
           <div
@@ -498,6 +510,7 @@ function showWorkerJobDetails(job) {
             <button
               class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-bold leading-normal tracking-[0.015em] w-full"
               id="createInvoiceBtn"
+              data-id="${job.id}"
             >
               <span class="truncate">Create Invoice</span>
             </button>
@@ -525,13 +538,6 @@ function showWorkerJobDetails(job) {
         });
     }
 
-    const createInvoiceBtn = document.getElementById('createInvoiceBtn');
-    if(createInvoiceBtn) {
-        createInvoiceBtn.addEventListener('click', () => {
-            const jobId = job.id;
-            showInvoiceScreen(jobId);
-        });
-    }
 }
 
 
@@ -759,6 +765,367 @@ function listenForWorkerJobs(technicianId, technicianName) {
 document.addEventListener('DOMContentLoaded', () => {
     // This is the main entry point after the page loads.
     // All form listeners and event handlers that need DOM elements will be set up here.
+    const adminNavHomeBtn = document.getElementById('adminNavHomeBtn');
+    const adminNavWorkersBtn = document.getElementById('adminNavWorkersBtn');
+    const adminNavAddBtn = document.getElementById('adminNavAddBtn');
+    const adminNavInvoicesBtn = document.getElementById('adminNavInvoicesBtn');
+    const adminNavSettingsBtn = document.getElementById('adminNavSettingsBtn');
+    const createInvoiceBtnHome = document.getElementById('createInvoiceBtnHome');
+    const settingsBtnWorker = document.getElementById('settingsBtnWorker');
+    const seeAllAdminDashboard = document.getElementById('seeAllAdminDashboard');
+    const backToMainViewBtn = document.getElementById('backToMainViewBtn');
+    const backToCurrentHomeBtn = document.getElementById('backToCurrentHomeBtn');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const laborInput = document.getElementById('labor');
+    const serviceCallInput = document.getElementById('serviceCall');
+    const customTaxRateInput = document.getElementById('customTaxRate');
+    const countyTaxRadios = document.querySelectorAll('input[name="countyTax"]');
+    const paymentMethodRadioGroup = document.getElementById('paymentMethodRadioGroup');
+    const chequeNumberArea = document.getElementById('chequeNumberArea');
+    const chequeNumberInput = document.getElementById('chequeNumber');
+    const saveInvoiceBtn = document.getElementById('saveInvoiceBtn');
+    const clearFormBtn = document.getElementById('clearFormBtn');
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalMarkPaidBtn = document.getElementById('modalMarkPaidBtn');
+    const modalDownloadPdfBtn = document.getElementById('modalDownloadPdfBtn');
+    const modalWorkerCloseBtn = document.getElementById('modalWorkerCloseBtn');
+    const modalRemoveWorkerBtn = document.getElementById('modalRemoveWorkerBtn');
+    const showAllInvoicesBtn = document.getElementById('showAllInvoicesBtn');
+    const backToWorkerSelectBtn = document.getElementById('backToWorkerSelectBtn');
+    const filterTabs = document.querySelectorAll('#adminInvoicesScreen .filter-tabs button');
+    const invoiceYearFilter = document.getElementById('invoiceYearFilter');
+    const applyDateFiltersBtn = document.getElementById('applyDateFiltersBtn');
+    const adminInvoiceSearchInput = document.getElementById('adminInvoiceSearchInput');
+    const addWorkerForm = document.getElementById('addWorkerForm');
+
+    if(createInvoiceBtnHome) createInvoiceBtnHome.addEventListener('click', () => showInvoiceFormScreen());
+    if(settingsBtnWorker) settingsBtnWorker.addEventListener('click', showSettingsScreen);
+
+    if(seeAllAdminDashboard) seeAllAdminDashboard.addEventListener('click', (e) => {
+        e.preventDefault();
+        showInvoiceListScreen(); // No filter options means show all
+    });
+
+
+    if(backToMainViewBtn) backToMainViewBtn.addEventListener('click', () => {
+        console.log(`Settings Back button clicked. previousAppView: ${previousAppView}, currentAdminScreen: ${currentAdminScreen}`);
+        if (currentUser && currentUser.type === 'admin') {
+            if (currentAdminScreen === 'invoicesList') showAdminInvoiceWorkerSelectScreen();
+            else if (currentAdminScreen === 'workers') showAdminWorkersScreen();
+            else showAdminHomeScreen();
+        } else { // Worker
+            showWorkerHomeScreen();
+        }
+    });
+    
+    if(backToCurrentHomeBtn) backToCurrentHomeBtn.addEventListener('click', () => {
+        console.log(`Invoice Form Back button clicked. currentAppView: ${currentAppView}, currentAdminScreen: ${currentAdminScreen}`);
+        if (currentUser && currentUser.type === 'admin') {
+            if (currentAdminScreen === 'invoicesList') showInvoiceListScreen({ worker: currentFilteredWorker });
+            else if(currentAdminScreen === 'invoiceWorkerSelect') showAdminInvoiceWorkerSelectScreen();
+            else if (currentAdminScreen === 'workers') showAdminWorkersScreen();
+            else showAdminHomeScreen();
+        } else { // Worker goes to worker home
+            showWorkerHomeScreen();
+        }
+    });
+
+    if(addItemBtn) addItemBtn.addEventListener('click', () => addLineItem());
+    
+    if(laborInput) laborInput.addEventListener('input', updateTotals);
+    if(serviceCallInput) serviceCallInput.addEventListener('input', updateTotals);
+
+    if (customTaxRateInput) {
+        customTaxRateInput.addEventListener('input', function() {
+            const otherRadio = document.querySelector('input[name="countyTax"][value="Other"]');
+            if (otherRadio && otherRadio.checked) {
+                const customRate = parseFloat(this.value) || 0;
+                if (salesTaxRateInput) {
+                    salesTaxRateInput.value = customRate.toFixed(2);
+                }
+                updateTotals();
+            }
+        });
+    }
+    
+    // Event listener for County Tax Radio Buttons
+    countyTaxRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (isFormLocked) {
+                const previouslySelected = Array.from(countyTaxRadios).find(r => r.dataset.wasChecked === 'true');
+                if (previouslySelected && previouslySelected !== this) {
+                    previouslySelected.checked = true; 
+                    this.checked = false;
+                }
+                return;
+            }
+            
+            if (this.value === 'Other') {
+                customTaxArea.classList.remove('hidden');
+                salesTaxRateInput.value = (parseFloat(customTaxRateInput.value) || 0).toFixed(2);
+            } else {
+                customTaxArea.classList.add('hidden');
+                if (this.checked) {
+                    const rate = parseFloat(this.dataset.rate);
+                    if (salesTaxRateInput) {
+                        salesTaxRateInput.value = rate.toFixed(2);
+                    }
+                }
+            }
+            updateTotals();
+            countyTaxRadios.forEach(r => r.dataset.wasChecked = (r === this) ? 'true' : 'false');
+        });
+    });
+
+    if (paymentMethodRadioGroup) {
+        paymentMethodRadioGroup.addEventListener('change', function(e) {
+            if (e.target.name === 'paymentMethod') {
+                if (e.target.value === 'Cheque') {
+                    chequeNumberArea.classList.remove('hidden');
+                    chequeNumberInput.required = true;
+                } else {
+                    chequeNumberArea.classList.add('hidden');
+                    chequeNumberInput.required = false;
+                }
+            }
+        });
+    }
+
+    if(saveInvoiceBtn) saveInvoiceBtn.addEventListener('click', async function() {
+        const paymentMethodRadio = document.querySelector('input[name="paymentMethod"]:checked');
+        if (!paymentMethodRadio) {
+            showMessage("A payment method is required.", "error");
+            document.getElementById('paymentMethodRadioGroup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        if (paymentMethodRadio.value === 'Cheque' && !chequeNumberInput.value.trim()) {
+            showMessage("Cheque # is required for cheque payments.", "error");
+            chequeNumberInput.focus();
+            return;
+        }
+        
+        if (!invoiceFormEl.checkValidity()) {
+             showMessage("Please fill out all required fields.", "error");
+             invoiceFormEl.reportValidity();
+             return;
+        }
+
+        saveInvoiceBtn.disabled = true; 
+        saveInvoiceBtn.textContent = 'Saving...';
+
+        try {
+            await db.runTransaction(async (transaction) => {
+                const counterRef = db.collection('counters').doc('invoiceCounter');
+                const counterDoc = await transaction.get(counterRef);
+
+                let nextNumber = 1;
+                if (counterDoc.exists && counterDoc.data().lastNumber) {
+                    nextNumber = counterDoc.data().lastNumber + 1;
+                }
+                const formattedInvoiceNumber = formatInvoiceNumber(nextNumber);
+
+                const dataToSave = collectInvoiceData(formattedInvoiceNumber); 
+                if (!dataToSave.customerName || !dataToSave.customerEmail) {
+                    throw new Error('Customer Name and Email are required.');
+                }
+                
+                dataToSave.pdfDataURL = generatePDF(dataToSave);
+                if (!dataToSave.pdfDataURL) {
+                    showMessage('Failed to generate PDF data. Invoice will be saved without PDF.', 'warning');
+                }
+
+                const newInvoiceRef = db.collection('invoices').doc(); 
+                transaction.set(newInvoiceRef, dataToSave);
+                
+                transaction.set(counterRef, { lastNumber: nextNumber }, { merge: true });
+            });
+
+            showMessage('Invoice saved successfully!', 'success');
+            currentEditingInvoiceId = null; 
+            confirmedSignatureDataURL = null;
+            isFormLocked = false; 
+            
+            if (currentAppView === 'worker') {
+                 showWorkerHomeScreen();
+            } else if (currentAppView === 'admin') {
+                 allAdminInvoicesCache = [];
+                if (currentAdminScreen === 'invoicesList') showInvoiceListScreen();
+                else showAdminHomeScreen(); 
+            } else { 
+                showWorkerHomeScreen();
+            }
+
+        } catch (error) {
+            console.error("Error in save invoice transaction:", error);
+            showMessage("Error saving invoice: " + error.message, "error");
+        } finally {
+            saveInvoiceBtn.disabled = false;
+            saveInvoiceBtn.textContent = 'Save Invoice';
+        }
+    });
+    
+
+    if(clearFormBtn) clearFormBtn.addEventListener('click', () => {
+        showConfirmationModal(
+            "Clear Form",
+            "Are you sure you want to clear the form? Unsaved data will be lost.",
+            () => {
+                if(invoiceFormEl) invoiceFormEl.reset();
+                setFormEditable(true); 
+                if(customTaxArea) customTaxArea.classList.add('hidden');
+                if(chequeNumberArea) chequeNumberArea.classList.add('hidden');
+
+                if(invoiceNumberDisplay) { 
+                    invoiceNumberDisplay.value = "Loading next...";
+                     db.collection('counters').doc('invoiceCounter').get().then(counterDoc => {
+                        let nextNumber = 1;
+                        if (counterDoc.exists && counterDoc.data().lastNumber) {
+                            nextNumber = counterDoc.data().lastNumber + 1;
+                        }
+                        invoiceNumberDisplay.value = formatInvoiceNumber(nextNumber);
+                    }).catch(err => {
+                        console.error("Error re-fetching next invoice number on clear:", err);
+                        invoiceNumberDisplay.value = "Error loading #";
+                    });
+                }
+                if(lineItemsContainer) lineItemsContainer.innerHTML = '';
+                lineItemCount = 0;
+                setInitialDate();
+                addLineItem();
+                if (salesTaxRateInput) { 
+                    salesTaxRateInput.value = "0.00";
+                }
+                updateTotals();
+                currentEditingInvoiceId = null; 
+                if(invoiceFormTitle) invoiceFormTitle.textContent = "New Invoice";
+                if(document.getElementById('nonCoveredItemsText')) document.getElementById('nonCoveredItemsText').value = '';
+                
+                confirmedSignatureDataURL = null;
+                if(signaturePad) {
+                    signaturePad.clear();
+                    signaturePad.on();
+                }
+                if(previewSignatureImg) previewSignatureImg.classList.add('hidden');
+                if(signaturePadContainer) signaturePadContainer.classList.remove('hidden');
+                if(signedBySection) signedBySection.classList.add('hidden');
+                if(confirmSignatureBtn) confirmSignatureBtn.classList.remove('hidden');
+                if(clearSignatureBtn) clearSignatureBtn.textContent = "Clear Signature";
+
+                if(signatureLoadingMessage) signatureLoadingMessage.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    if (signaturePadContainer && signaturePadContainer.offsetParent !== null) {
+                       resizeCanvas();
+                    }
+                    if(signatureLoadingMessage) signatureLoadingMessage.classList.add('hidden');
+                });
+
+                showMessage('Form cleared.', 'success');
+            }
+        );
+    });
+
+    if(downloadPdfBtn) downloadPdfBtn.addEventListener('click', async () => {
+        showMessage("Please save the invoice first to generate and download the PDF.", "info");
+    });
+
+    if(modalCloseBtn) modalCloseBtn.addEventListener('click', closeInvoiceViewModal);
+    
+    if(modalMarkPaidBtn) modalMarkPaidBtn.addEventListener('click', async function() {
+        if (currentlyViewedInvoiceData) {
+            const newStatus = currentlyViewedInvoiceData.status === 'paid' ? 'pending' : 'paid';
+            let invoiceToUpdate = { ...currentlyViewedInvoiceData, status: newStatus, updatedAt: new Date().toISOString() };
+            
+            const updatedPdfData = generatePDF(invoiceToUpdate);
+
+            if (updatedPdfData) {
+                invoiceToUpdate.pdfDataURL = updatedPdfData;
+            } else {
+                console.warn("[Modal Mark Paid] Could not re-generate PDF on status change. Old PDF data (if any) will be kept.");
+            }
+
+            if (await saveInvoiceData(invoiceToUpdate, true, currentlyViewedInvoiceData.id)) { 
+                showMessage(`Invoice #${currentlyViewedInvoiceData.invoiceNumber} marked as ${newStatus}.`, 'success');
+                allAdminInvoicesCache = [];
+                closeInvoiceViewModal(); 
+            }
+        }
+    });
+    
+    if(modalDownloadPdfBtn) modalDownloadPdfBtn.addEventListener('click', async function() {
+        if (currentlyViewedInvoiceData && currentlyViewedInvoiceData.pdfDataURL) {
+            await triggerPdfDownload(currentlyViewedInvoiceData.pdfDataURL, `Safeway-Invoice-${currentlyViewedInvoiceData.invoiceNumber || 'draft'}.pdf`);
+        } else if (currentlyViewedInvoiceData) {
+            const pdfData = generatePDF(currentlyViewedInvoiceData);
+            if (pdfData) {
+                currentlyViewedInvoiceData.pdfDataURL = pdfData;
+                if (await saveInvoiceData(currentlyViewedInvoiceData, true, currentlyViewedInvoiceData.id)) { 
+                     await triggerPdfDownload(pdfData, `Safeway-Invoice-${currentlyViewedInvoiceData.invoiceNumber || 'draft'}.pdf`);
+                     allAdminInvoicesCache = [];
+                } else {
+                    showMessage('Failed to update invoice with new PDF before download.', 'error');
+                }
+            } else {
+                showMessage('Failed to generate PDF for download.', 'error');
+            }
+        } else {
+            showMessage('No invoice data to download PDF.', 'error');
+        }
+    });
+    if(modalWorkerCloseBtn) modalWorkerCloseBtn.addEventListener('click', closeWorkerDetailModal);
+    if(modalRemoveWorkerBtn) modalRemoveWorkerBtn.addEventListener('click', function() {
+        console.log("Modal Remove Worker button clicked. currentlySelectedWorker:", currentlySelectedWorker);
+        if (currentlySelectedWorker) {
+             removeWorker(currentlySelectedWorker); 
+        }
+    });
+
+
+    // Main Navigation Handlers
+    if(adminNavHomeBtn) adminNavHomeBtn.addEventListener('click', () => showAdminHomeScreen());
+    if(adminNavWorkersBtn) adminNavWorkersBtn.addEventListener('click', () => showAdminWorkersScreen());
+    if(adminNavAddBtn) adminNavAddBtn.addEventListener('click', () => showInvoiceFormScreen());
+    if(adminNavInvoicesBtn) adminNavInvoicesBtn.addEventListener('click', () => showAdminInvoiceWorkerSelectScreen());
+    if(adminNavSettingsBtn) adminNavSettingsBtn.addEventListener('click', showSettingsScreen);
+
+    // Invoice List Screen Handlers
+    if(showAllInvoicesBtn) showAllInvoicesBtn.addEventListener('click', () => showInvoiceListScreen());
+    if(backToWorkerSelectBtn) backToWorkerSelectBtn.addEventListener('click', () => showAdminInvoiceWorkerSelectScreen());
+
+
+    if (filterTabs && filterTabs.length > 0) {
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                console.log(`Filter tab clicked: ${this.dataset.filter}`);
+                filterTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                loadAdminInvoicesListData(); 
+            });
+        });
+    } else {
+        console.warn("Filter tabs not found or empty, event listeners not attached.");
+    }
+    
+    if (invoiceYearFilter) {
+        invoiceYearFilter.addEventListener('change', () => {
+            populateMonthFilter();
+        });
+    }
+    if (applyDateFiltersBtn) {
+        applyDateFiltersBtn.addEventListener('click', () => {
+            loadAdminInvoicesListData();
+        });
+    }
+    
+    let searchTimeout;
+    if(adminInvoiceSearchInput) adminInvoiceSearchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadAdminInvoicesListData();
+        }, 500); 
+    });
+    if(addWorkerForm) addWorkerForm.addEventListener('submit', handleAddWorker);
 
     // Modal Close/Cancel Buttons
     if(closeEditTechModalBtn) closeEditTechModalBtn.addEventListener('click', closeEditTechModal);
@@ -958,6 +1325,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const jobData = currentWorkerAssignedJobs.find(j => j.id === jobId);
                 if (jobData) {
                     showWorkerJobDetails(jobData);
+                }
+            }
+
+            const createInvoiceButton = event.target.closest('#createInvoiceBtn');
+            if (createInvoiceButton) {
+                const jobId = createInvoiceButton.dataset.id;
+                if (jobId) {
+                    showInvoiceScreen(jobId);
                 }
             }
         });
@@ -1350,9 +1725,53 @@ function showInvoiceScreen(jobId) {
     const invoiceContainer = document.getElementById('invoiceScreenContainer');
     if (invoiceContainer) {
         invoiceContainer.classList.remove('hidden');
-        invoiceContainer.style.display = 'block';
+        invoiceContainer.style.display = 'block'; // Use block to ensure it's visible
     }
+
+    const invoiceFormScreen = document.getElementById('invoiceFormScreen');
+    if(invoiceFormScreen){
+        invoiceFormScreen.classList.remove('hidden');
+    }
+
 
     // Populate invoice form fields
     populateInvoiceForm(job);
+}
+
+function showWorkerHomeScreen() {
+    console.log("showWorkerHomeScreen called");
+    currentAppView = 'worker'; 
+    showPage('workerHomeScreen');
+    loadSavedInvoicesToHome(); 
+    if(loggedInUserDisplay && currentUser) {
+         const userDisplayName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
+         loggedInUserDisplay.textContent = `${userDisplayName} (Worker)`;
+    }
+}
+
+function showAdminHomeScreen() {
+    console.log("showAdminHomeScreen called");
+    currentAppView = 'admin'; 
+    currentAdminScreen = 'dashboard';
+    showPage('adminHomeScreen');
+    loadAdminDashboardData();
+    updateAdminNavActiveState('adminNavHomeBtn');
+    if(loggedInUserDisplay && currentUser) {
+        const userDisplayName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
+        loggedInUserDisplay.textContent = `${userDisplayName} (Admin)`;
+    }
+}
+
+function showSettingsScreen() {
+    console.log(`showSettingsScreen called. currentAppView before setting previous: ${currentAppView}`);
+    previousAppView = currentAppView; 
+    console.log(`  previousAppView is now: ${previousAppView}, currentAdminScreen: ${currentAdminScreen}`);
+    showPage('settingsScreen');
+    if (currentUser && currentUser.type === 'admin') { 
+        updateAdminNavActiveState('adminNavSettingsBtn');
+    }
+    if(loggedInUserDisplay && currentUser) {
+         const userDisplayName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
+         loggedInUserDisplay.textContent = `${userDisplayName} (${currentAppView || 'User'})`; 
+    }
 }
