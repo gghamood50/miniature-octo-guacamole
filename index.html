@@ -377,7 +377,7 @@
 
     <!-- Invoice Screen Container -->
     <div id="invoiceScreenContainer" class="hidden">
-        <div id="invoiceFormScreen" class="page">
+        <div id="invoiceFormScreen" class="page hidden">
             <div class="page-header">
                 <button id="backToCurrentHomeBtn" class="btn-back"><i class="fas fa-chevron-left"></i> Home</button>
                 <h1 id="invoiceFormTitle">New Invoice</h1>
@@ -398,7 +398,7 @@
                                 <input type="date" id="invoiceDate" name="invoiceDate" class="form-input" placeholder="YYYY-MM-DD" required>
                             </div>
                             <div class="sm:col-span-2">
-                                <label for="poNumber" class="form-label">Dispatch #</label>
+                                <label for="poNumber" class="form-label">P.O. Number</label>
                                 <input type="text" id="poNumber" name="poNumber" class="form-input" placeholder="Optional P.O. Number">
                             </div>
                             <div id="countyTaxRadioGroup" class="sm:col-span-2">
@@ -442,7 +442,7 @@
                                 <input type="text" id="planType" name="planType" class="form-input" placeholder="e.g., Basic, Premium">
                             </div>
                             <div>
-                                <label for="warrantyName" class="form-label">Warranty Provider</label>
+                                <label for="warrantyName" class="form-label">Warranty Name</label>
                                 <input type="text" id="warrantyName" name="warrantyName" class="form-input" placeholder="e.g., 1-Year Parts">
                             </div>
                         </div>
@@ -525,18 +525,26 @@
                         <h2 class="text-lg font-semibold mb-3">Summary</h2>
                         <div class="space-y-2">
                             <div class="flex justify-between">
-                                <span class="form-label">Labour Costs($):</span>
-                                <input type="number" id="labor" name="labor" class="form-input text-right" value="0" min="0" step="0.01" placeholder="0.00">
+                                <span class="form-label">Subtotal:</span>
+                                <span id="subtotalDisplay" class="font-medium">$0.00</span>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                                 <div>
+                                    <label for="labor" class="form-label">Labor ($):</label>
+                                    <input type="number" id="labor" name="labor" class="form-input text-right" value="0" min="0" step="0.01" placeholder="0.00">
+                                </div>
+                                <div>
                                     <label for="serviceCall" class="form-label">Service Call ($):</label>
-                                    <input type="number" id="serviceCall" name="serviceCall" class="form-input text-right" value="85" min="0" step="0.01" placeholder="0.00">
+                                    <input type="number" id="serviceCall" name="serviceCall" class="form-input text-right" value="0" min="0" step="0.01" placeholder="0.00">
                                 </div>
                             </div>
                             <div class="mt-2">
-                                <label for="salesTaxRate" class="form-label">Tax rate(%):</label>
+                                <label for="salesTaxRate" class="form-label">Sales Tax Rate (%):</label>
                                 <input type="number" id="salesTaxRate" name="salesTaxRate" class="form-input text-right bg-gray-100 cursor-not-allowed" value="0.00" min="0" step="0.01" readonly>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="form-label">Calculated Sales Tax:</span>
+                                <span id="salesTaxAmountDisplay" class="font-medium">$0.00</span>
                             </div>
                             <hr class="my-3 border-gray-300">
                             <div class="flex justify-between font-bold text-lg">
@@ -552,7 +560,7 @@
                             <p>Payment due upon receipt of invoice. A service charge of $5.00 or 1.5% monthly (whichever is greater) will be charged on all balances over 15 days from date of invoice.</p>
                             <p class="mt-1">Service and Parts Warranty: All new parts described in the invoice are covered by MANUFACTURER'S warranty. Safeway Garage Doors agrees to supply said in-warranty parts for one year at no charge. Labor warranty on SERVICE CALLS is 30 Days on same problem.</p>
                         </div>
-                        <p class="mt-2 text-red-600 font-bold text-sm text-center">By signing, you agree to the terms & conditions.</p>
+                        <p class="mt-2 text-red-600 font-bold text-sm text-center">By signing, you agree to the terms and conditions.</p>
                     </div>
 
                     <div class="card" id="signatureSection">
@@ -579,6 +587,7 @@
                 </form>
             </div>
             <div class="form-actions">
+                <button type="button" id="downloadPdfBtn" class="btn btn-secondary">Download PDF</button>
                 <button type="button" id="clearFormBtn" class="btn btn-secondary">Clear Form</button>
                 <button type="button" id="saveInvoiceBtn" class="btn btn-primary">Save Invoice</button>
             </div>
