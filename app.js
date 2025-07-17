@@ -846,14 +846,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resizeCanvas() {
-        if (!signatureCanvas) return;
-        const ratio =  Math.max(window.devicePixelRatio || 1, 1);
-        signatureCanvas.width = signatureCanvas.offsetWidth * ratio;
-        signatureCanvas.height = signatureCanvas.offsetHeight * ratio;
-        signatureCanvas.getContext("2d").scale(ratio, ratio);
-        if (signaturePad) {
-            signaturePad.clear(); // otherwise isEmpty() might return incorrect value
+        if (!signatureCanvas || !signaturePad) {
+            return;
         }
+
+        const container = signatureCanvas.parentElement;
+        if (!container) return;
+
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const tempDiv = document.createElement('div');
+        tempDiv.style.width = '100%';
+        tempDiv.style.height = '150px';
+        container.appendChild(tempDiv);
+        const newHeight = tempDiv.clientHeight;
+        container.removeChild(tempDiv);
+
+        signatureCanvas.width = container.offsetWidth * ratio;
+        signatureCanvas.height = newHeight * ratio;
+        signatureCanvas.getContext("2d").scale(ratio, ratio);
+
+        signaturePad.clear();
     }
 
     window.addEventListener("resize", resizeCanvas);
