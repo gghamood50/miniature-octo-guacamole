@@ -80,6 +80,7 @@ function setFormEditable(editable) {
     const invoiceFormEl = document.getElementById('invoiceForm');
     const addItemBtn = document.getElementById('addItemBtn');
     const clearFormBtn = document.getElementById('clearFormBtn');
+    const editSignatureBtn = document.getElementById('editSignatureBtn');
     isFormLocked = !editable;
     const formElements = invoiceFormEl.elements;
     for (let i = 0; i < formElements.length; i++) {
@@ -97,6 +98,10 @@ function setFormEditable(editable) {
     if (addItemBtn) addItemBtn.disabled = !editable;
     document.querySelectorAll('.removeItemBtn').forEach(btn => btn.disabled = !editable);
     if (clearFormBtn) clearFormBtn.disabled = !editable;
+    if (editSignatureBtn) {
+        editSignatureBtn.disabled = false;
+        editSignatureBtn.classList.remove('bg-gray-100', 'cursor-not-allowed');
+    }
     if (signaturePad) {
         if (editable) signaturePad.on();
         else signaturePad.off(); 
@@ -264,6 +269,23 @@ function populateInvoiceForm(job) {
 
 function formatCurrency(amount) {
     return `$${parseFloat(amount || 0).toFixed(2)}`;
+}
+
+function editSignature() {
+    const signaturePadContainer = document.querySelector('.signature-pad-container');
+    const previewSignatureImg = document.getElementById('previewSignatureImg');
+    const clearSignatureBtn = document.getElementById('clearSignatureBtn');
+    const confirmSignatureBtn = document.getElementById('confirmSignatureBtn');
+    const editSignatureBtn = document.getElementById('editSignatureBtn');
+
+    if (signaturePadContainer) signaturePadContainer.classList.remove('hidden');
+    if (previewSignatureImg) previewSignatureImg.classList.add('hidden');
+    if (clearSignatureBtn) clearSignatureBtn.classList.remove('hidden');
+    if (confirmSignatureBtn) confirmSignatureBtn.classList.remove('hidden');
+    if (editSignatureBtn) editSignatureBtn.classList.add('hidden');
+    
+    setFormEditable(true);
+    confirmedSignatureDataURL = null;
 }
 
 // --- END INVOICE.JS ---
