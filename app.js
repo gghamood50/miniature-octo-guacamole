@@ -901,19 +901,42 @@ function setFormEditable(editable) {
 }
     if (clearSignatureBtn) {
         clearSignatureBtn.addEventListener('click', () => {
-            if (signaturePad) {
-                signaturePad.clear();
-                confirmedSignatureDataURL = null;
-                const signatureDisplayArea = document.getElementById('signatureDisplayArea');
-                const existingImg = signatureDisplayArea.querySelector('img');
-                if (existingImg) {
-                    existingImg.remove();
+            // This button now serves two purposes: "Clear Signature" and "Edit Signature"
+            
+            // If the form is locked, it means a signature is confirmed and we want to edit.
+            if (isFormLocked) {
+                // "Edit Signature" functionality
+                const previewImg = document.getElementById('previewSignatureImg');
+                if(previewImg) {
+                    previewImg.classList.add('hidden');
+                    previewImg.src = '#'; // Clear the src
                 }
-                signaturePadContainer.classList.remove('hidden');
-                signedBySection.classList.add('hidden');
-                confirmSignatureBtn.classList.remove('hidden');
+                
+                if(signaturePadContainer) signaturePadContainer.classList.remove('hidden');
+                
+                // Reset signature data
+                confirmedSignatureDataURL = null; 
+                if(signaturePad) {
+                    signaturePad.clear();
+                    signaturePad.on(); // Ensure the pad is active
+                }
+
+                if(signedBySection) signedBySection.classList.add('hidden');
+                if(confirmSignatureBtn) confirmSignatureBtn.classList.remove('hidden');
                 clearSignatureBtn.textContent = "Clear Signature";
-                setFormEditable(true); // Re-enable the form
+                
+                setFormEditable(true); // This will unlock the form and set isFormLocked = false
+                
+                // Resize canvas after it becomes visible
+                requestAnimationFrame(() => {
+                    resizeCanvas();
+                });
+
+            } else {
+                // "Clear Signature" functionality (when form is not locked)
+                if (signaturePad) {
+                    signaturePad.clear();
+                }
             }
         });
     }
@@ -922,19 +945,11 @@ function setFormEditable(editable) {
         confirmSignatureBtn.addEventListener('click', () => {
             if (signaturePad && !signaturePad.isEmpty()) {
                 confirmedSignatureDataURL = signaturePad.toDataURL();
-                const signatureDisplayArea = document.getElementById('signatureDisplayArea');
-                
-                // Remove any existing signature image
-                const existingImg = signatureDisplayArea.querySelector('img');
-                if (existingImg) {
-                    existingImg.remove();
+                const previewImg = document.getElementById('previewSignatureImg');
+                if(previewImg) {
+                    previewImg.src = confirmedSignatureDataURL;
+                    previewImg.classList.remove('hidden');
                 }
-
-                const img = document.createElement('img');
-                img.src = confirmedSignatureDataURL;
-                img.alt = "Signature Preview";
-                img.classList.add('signature-preview');
-                signatureDisplayArea.insertBefore(img, signaturePadContainer);
 
                 if(signaturePadContainer) signaturePadContainer.classList.add('hidden');
                 
@@ -947,7 +962,6 @@ function setFormEditable(editable) {
                 if(confirmSignatureBtn) confirmSignatureBtn.classList.add('hidden');
                 if(clearSignatureBtn) {
                     clearSignatureBtn.textContent = "Edit Signature";
-                    clearSignatureBtn.disabled = false; // Ensure the button is not locked
                 }
                 setFormEditable(false); // Lock the form
 
