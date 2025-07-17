@@ -266,17 +266,27 @@ body {
 
 /* Invoice specific styles */
 #invoiceFormScreen .page-header {
-    background-color: var(--color-darkest);
-    color: var(--color-lightest);
+    background-color: #1f2937; /* gray-800 */
+    color: #f9fafb; /* gray-50 */
     padding: 1rem 1.5rem;
-    border-bottom: 4px solid var(--color-accent);
+    border-bottom: 4px solid #059669; /* green-600 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 #invoiceFormScreen .btn-back {
-    color: var(--color-lightest);
+    color: #f9fafb; /* gray-50 */
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
 }
 #invoiceFormScreen h1 {
     font-size: 1.5rem;
     font-weight: 700;
+}
+.invoice-form-content {
+    padding: 1rem;
 }
 #invoiceFormScreen .card {
     background-color: #fff;
@@ -293,12 +303,18 @@ body {
     border-color: #D1D5DB; /* gray-300 */
 }
 #invoiceFormScreen .form-input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px var(--color-primary-light);
+    border-color: #059669; /* green-600 */
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.3);
 }
-#invoiceFormScreen #signature-pad {
+#invoiceFormScreen .signature-pad-container {
     border: 2px dashed #D1D5DB; /* gray-300 */
     border-radius: 8px;
+    position: relative;
+    height: 150px;
+}
+#signatureCanvas {
+    width: 100%;
+    height: 100%;
 }
 #invoiceFormScreen .form-actions {
     background-color: #fff;
@@ -309,4 +325,37 @@ body {
     gap: 0.75rem;
     position: sticky;
     bottom: 0;
+    z-index: 50;
+}
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-primary {
+    background-color: #059669; /* green-600 */
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #047857; /* green-700 */
+}
+.btn-secondary {
+    background-color: #e5e7eb; /* gray-200 */
+    color: #1f2937; /* gray-800 */
+}
+.btn-secondary:hover {
+    background-color: #d1d5db; /* gray-300 */
+}
+.btn-danger {
+    background-color: #dc2626; /* red-600 */
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #b91c1c; /* red-700 */
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
 }
