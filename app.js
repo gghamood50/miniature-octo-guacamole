@@ -130,7 +130,7 @@ const invoiceNumberDisplay = document.getElementById('invoiceNumberDisplay');
 const customTaxArea = document.getElementById('customTaxArea');
 const salesTaxRateInput = document.getElementById('salesTaxRate');
 const previewSignatureImg = document.getElementById('previewSignatureImg');
-const signaturePadContainer = document.getElementById('signaturePadContainer');
+const signaturePadContainer = document.querySelector('.signature-pad-container');
 const signedBySection = document.getElementById('signedBySection');
 const invoiceFormTitle = document.getElementById('invoiceFormTitle');
 const signatureLoadingMessage = document.getElementById('signatureLoadingMessage');
@@ -883,49 +883,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(confirmSignatureBtn) {
         confirmSignatureBtn.addEventListener('click', () => {
-            if (confirmedSignatureDataURL) {
-                showMessage("Signature already captured.", "info");
-                return;
-            }
             if (signaturePad && !signaturePad.isEmpty()) {
+                const signaturePadContainer = document.querySelector('.signature-pad-container');
+                const customerNameInput = document.getElementById('customerName');
+                const signedByName = document.getElementById('signedByName');
+                
+                if (!signaturePadContainer || !previewSignatureImg || !signedBySection || !clearSignatureBtn || !editSignatureBtn || !customerNameInput || !signedByName) {
+                    return;
+                }
+
                 confirmedSignatureDataURL = signaturePad.toDataURL();
-                const previewImg = document.getElementById('previewSignatureImg');
-                if(previewImg) {
-                    previewImg.src = confirmedSignatureDataURL;
-                    previewImg.classList.remove('hidden');
-                }
-
-                if(signaturePadContainer) signaturePadContainer.classList.add('hidden');
+                previewSignatureImg.src = confirmedSignatureDataURL;
+                previewSignatureImg.classList.remove('hidden');
+                signaturePadContainer.classList.add('hidden');
                 
-                const customerName = document.getElementById('customerName').value.trim();
-                if(signedBySection) {
-                    const signedByName = document.getElementById('signedByName');
-                    signedByName.textContent = customerName || "Customer";
-                    // Only show the name, not the "(Confirmed)" part yet.
-                    signedBySection.classList.remove('hidden'); 
-                }
+                const customerName = customerNameInput.value.trim();
+                signedByName.textContent = customerName || "Customer";
+                signedBySection.classList.remove('hidden');
                 
-                if(confirmSignatureBtn) {
-                    confirmSignatureBtn.textContent = "Signature Captured";
-                    confirmSignatureBtn.disabled = true;
-                }
-                if(clearSignatureBtn) clearSignatureBtn.classList.add('hidden');
+                confirmSignatureBtn.classList.add('hidden');
+                clearSignatureBtn.classList.add('hidden');
+                editSignatureBtn.classList.remove('hidden');
                 
-                // Show a new button to finalize the signature
-                const finalizeSignatureBtn = document.getElementById('finalizeSignatureBtn');
-                if (!finalizeSignatureBtn) {
-                    const newButton = document.createElement('button');
-                    newButton.type = 'button';
-                    newButton.id = 'finalizeSignatureBtn';
-                    newButton.className = 'btn btn-success btn-sm';
-                    newButton.textContent = 'Confirm Signature';
-                    confirmSignatureBtn.parentElement.appendChild(newButton);
-                    newButton.addEventListener('click', finalizeSignature);
-                } else {
-                    finalizeSignatureBtn.classList.remove('hidden');
-                }
-
-
+                setFormEditable(false); // Lock the form
             } else {
                 showMessage("Please provide a signature first.", "error");
             }
@@ -940,43 +920,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function editSignature() {
-        const signaturePadContainer = document.querySelector('.signature-pad-container');
-        const previewSignatureImg = document.getElementById('previewSignatureImg');
-        const clearSignatureBtn = document.getElementById('clearSignatureBtn');
-        const confirmSignatureBtn = document.getElementById('confirmSignatureBtn');
-        const editSignatureBtn = document.getElementById('editSignatureBtn');
-        const finalizeSignatureBtn = document.getElementById('finalizeSignatureBtn');
-
-        if (signaturePadContainer) signaturePadContainer.classList.remove('hidden');
-        if (previewSignatureImg) previewSignatureImg.classList.add('hidden');
-        if (clearSignatureBtn) clearSignatureBtn.classList.remove('hidden');
-        if (confirmSignatureBtn) {
-            confirmSignatureBtn.classList.remove('hidden');
-            confirmSignatureBtn.textContent = 'Confirm Signature';
-        }
-        if (editSignatureBtn) editSignatureBtn.classList.add('hidden');
-        if (finalizeSignatureBtn) finalizeSignatureBtn.classList.add('hidden');
+        signaturePadContainer.classList.remove('hidden');
+        previewSignatureImg.classList.add('hidden');
+        clearSignatureBtn.classList.remove('hidden');
+        confirmSignatureBtn.classList.remove('hidden');
+        editSignatureBtn.classList.add('hidden');
         
         setFormEditable(true);
         confirmedSignatureDataURL = null;
         if (signedBySection) signedBySection.classList.add('hidden');
-    }
-
-    function finalizeSignature() {
-        if(signedBySection) {
-            const signedByName = document.getElementById('signedByName');
-            signedByName.innerHTML += ' (Confirmed)';
-        }
-        setFormEditable(false); // Lock the form
-        const finalizeSignatureBtn = document.getElementById('finalizeSignatureBtn');
-        if(finalizeSignatureBtn) finalizeSignatureBtn.classList.add('hidden');
-        if(confirmSignatureBtn) confirmSignatureBtn.classList.add('hidden');
-        if(clearSignatureBtn) clearSignatureBtn.classList.add('hidden');
-        const editSignatureBtn = document.getElementById('editSignatureBtn');
-        if(editSignatureBtn) {
-            editSignatureBtn.classList.remove('hidden');
-            editSignatureBtn.disabled = true;
-        }
     }
 
     if(seeAllAdminDashboard) seeAllAdminDashboard.addEventListener('click', (e) => {
@@ -1993,26 +1945,29 @@ function showInvoiceScreen(jobId) {
     // Hide other views
     if (layoutContainer) layoutContainer.style.display = 'none';
     if (workerPwaView) workerPwaView.classList.add('hidden');
+
+    // --- START: CORRECTED CODE ---
     
-    // Show the invoice container
-    const invoiceContainer = document.getElementById('invoiceScreenContainer');
-    if (invoiceContainer) {
-        invoiceContainer.classList.remove('hidden');
-        invoiceContainer.style.display = 'block'; // Use block to ensure it's visible
-    }
+    // Find the invoice screen using the correct ID
+    const invoiceScreen = document.getElementById('invoiceFormScreen');
 
-    const invoiceFormScreen = document.getElementById('invoiceFormScreen');
-    if(invoiceFormScreen){
-        invoiceFormScreen.classList.remove('hidden');
+    // Make sure the element exists before trying to modify it
+    if (invoiceScreen) {
+        invoiceScreen.classList.remove('hidden');
+    } else {
+        // Log an error if the screen is missing, which helps in future debugging
+        console.error("Fatal Error: The invoice form screen could not be found in the DOM.");
+        return; // Stop the function if the main element is missing
     }
-
+    
+    // --- END: CORRECTED CODE ---
 
     // Populate invoice form fields
     populateInvoiceForm(job);
 
     // Ensure the canvas is sized correctly now that it's visible
     resizeCanvas();
-
+    
     // Automatically fill warranty and plan info
     const planTypeInput = document.getElementById('planType');
     const warrantyNameInput = document.getElementById('warrantyName');
