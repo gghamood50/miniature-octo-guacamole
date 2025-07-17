@@ -873,70 +873,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // We will call resizeCanvas() when the invoice screen is actually shown,
     // not just on initial DOM load. This is handled in the `showInvoiceScreen` function.
 
-function setFormEditable(editable) {
-    const invoiceFormEl = document.getElementById('invoiceForm');
-    const addItemBtn = document.getElementById('addItemBtn');
-    const clearFormBtn = document.getElementById('clearFormBtn');
-    isFormLocked = !editable;
-    const formElements = invoiceFormEl.elements;
-    for (let i = 0; i < formElements.length; i++) {
-        const element = formElements[i];
-        if (element.id !== 'invoiceNumberDisplay' && element.id !== 'salesTaxRate') {
-            element.readOnly = !editable;
-            element.disabled = !editable;
-            if(!editable) {
-                element.classList.add('bg-gray-100', 'cursor-not-allowed');
-            } else {
-                element.classList.remove('bg-gray-100', 'cursor-not-allowed');
-            }
-        }
-    }
-    if (addItemBtn) addItemBtn.disabled = !editable;
-    document.querySelectorAll('.removeItemBtn').forEach(btn => btn.disabled = !editable);
-    if (clearFormBtn) clearFormBtn.disabled = !editable;
-    if (signaturePad) {
-        if (editable) signaturePad.on();
-        else signaturePad.off(); 
-    }
-}
     if (clearSignatureBtn) {
         clearSignatureBtn.addEventListener('click', () => {
-            // This button now serves two purposes: "Clear Signature" and "Edit Signature"
-            
-            // If the form is locked, it means a signature is confirmed and we want to edit.
-            if (isFormLocked) {
-                // "Edit Signature" functionality
-                const previewImg = document.getElementById('previewSignatureImg');
-                if(previewImg) {
-                    previewImg.classList.add('hidden');
-                    previewImg.src = '#'; // Clear the src
-                }
-                
-                if(signaturePadContainer) signaturePadContainer.classList.remove('hidden');
-                
-                // Reset signature data
-                confirmedSignatureDataURL = null; 
-                if(signaturePad) {
-                    signaturePad.clear();
-                    signaturePad.on(); // Ensure the pad is active
-                }
-
-                if(signedBySection) signedBySection.classList.add('hidden');
-                if(confirmSignatureBtn) confirmSignatureBtn.classList.remove('hidden');
-                clearSignatureBtn.textContent = "Clear Signature";
-                
-                setFormEditable(true); // This will unlock the form and set isFormLocked = false
-                
-                // Resize canvas after it becomes visible
-                requestAnimationFrame(() => {
-                    resizeCanvas();
-                });
-
-            } else {
-                // "Clear Signature" functionality (when form is not locked)
-                if (signaturePad) {
-                    signaturePad.clear();
-                }
+            if (signaturePad) {
+                signaturePad.clear();
             }
         });
     }
@@ -960,14 +900,22 @@ function setFormEditable(editable) {
                 }
                 
                 if(confirmSignatureBtn) confirmSignatureBtn.classList.add('hidden');
-                if(clearSignatureBtn) {
-                    clearSignatureBtn.textContent = "Edit Signature";
-                }
+                if(clearSignatureBtn) clearSignatureBtn.classList.add('hidden');
+                const editSignatureBtn = document.getElementById('editSignatureBtn');
+                if(editSignatureBtn) editSignatureBtn.classList.remove('hidden');
+                
                 setFormEditable(false); // Lock the form
 
             } else {
                 showMessage("Please provide a signature first.", "error");
             }
+        });
+    }
+
+    const editSignatureBtn = document.getElementById('editSignatureBtn');
+    if(editSignatureBtn) {
+        editSignatureBtn.addEventListener('click', () => {
+            editSignature();
         });
     }
 
