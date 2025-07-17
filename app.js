@@ -853,29 +853,106 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = signatureCanvas.parentElement;
         if (!container) return;
 
-        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        const tempDiv = document.createElement('div');
-        tempDiv.style.width = '100%';
-        tempDiv.style.height = '150px';
-        container.appendChild(tempDiv);
-        const newHeight = tempDiv.clientHeight;
-        container.removeChild(tempDiv);
+        // Delay getting container width until it's actually visible
+        requestAnimationFrame(() => {
+            const containerWidth = container.offsetWidth;
+            if (containerWidth === 0) return; // Still not visible
 
-        signatureCanvas.width = container.offsetWidth * ratio;
-        signatureCanvas.height = newHeight * ratio;
-        signatureCanvas.getContext("2d").scale(ratio, ratio);
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            
+            signatureCanvas.width = containerWidth * ratio;
+            signatureCanvas.height = 150 * ratio; // Fixed height
+            signatureCanvas.getContext("2d").scale(ratio, ratio);
 
-        signaturePad.clear();
+            signaturePad.clear(); // Reclears the canvas after resizing
+        });
     }
 
     window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+    
+    // We will call resizeCanvas() when the invoice screen is actually shown,
+    // not just on initial DOM load. This is handled in the `showInvoiceScreen` function.
 
+function setFormEditable(editable) {
+    const invoiceFormEl = document.getElementById('invoiceForm');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const clearFormBtn = document.getElementById('clearFormBtn');
+    isFormLocked = !editable;
+    const formElements = invoiceFormEl.elements;
+    for (let i = 0; i < formElements.length; i++) {
+        const element = formElements[i];
+        if (element.id !== 'invoiceNumberDisplay' && element.id !== 'salesTaxRate') {
+            element.readOnly = !editable;
+            element.disabled = !editable;
+            if(!editable) {
+                element.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                element.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+        }
+    }
+    if (addItemBtn) addItemBtn.disabled = !editable;
+    document.querySelectorAll('.removeItemBtn').forEach(btn => btn.disabled = !editable);
+    if (clearFormBtn) clearFormBtn.disabled = !editable;
+    if (signaturePad) {
+        if (editable) signaturePad.on();
+        else signaturePad.off(); 
+    }
+}
     if (clearSignatureBtn) {
         clearSignatureBtn.addEventListener('click', () => {
             if (signaturePad) {
                 signaturePad.clear();
                 confirmedSignatureDataURL = null;
+                const signatureDisplayArea = document.getElementById('signatureDisplayArea');
+                const existingImg = signatureDisplayArea.querySelector('img');
+                if (existingImg) {
+                    existingImg.remove();
+                }
+                signaturePadContainer.classList.remove('hidden');
+                signedBySection.classList.add('hidden');
+                confirmSignatureBtn.classList.remove('hidden');
+                clearSignatureBtn.textContent = "Clear Signature";
+                setFormEditable(true); // Re-enable the form
+            }
+        });
+    }
+
+    if(confirmSignatureBtn) {
+        confirmSignatureBtn.addEventListener('click', () => {
+            if (signaturePad && !signaturePad.isEmpty()) {
+                confirmedSignatureDataURL = signaturePad.toDataURL();
+                const signatureDisplayArea = document.getElementById('signatureDisplayArea');
+                
+                // Remove any existing signature image
+                const existingImg = signatureDisplayArea.querySelector('img');
+                if (existingImg) {
+                    existingImg.remove();
+                }
+
+                const img = document.createElement('img');
+                img.src = confirmedSignatureDataURL;
+                img.alt = "Signature Preview";
+                img.classList.add('signature-preview');
+                signatureDisplayArea.insertBefore(img, signaturePadContainer);
+
+                if(signaturePadContainer) signaturePadContainer.classList.add('hidden');
+                
+                const customerName = document.getElementById('customerName').value.trim();
+                if(signedBySection) {
+                    document.getElementById('signedByName').textContent = customerName || "Customer";
+                    signedBySection.classList.remove('hidden');
+                }
+                
+                if(confirmSignatureBtn) confirmSignatureBtn.classList.add('hidden');
+                if(clearSignatureBtn) {
+                    clearSignatureBtn.textContent = "Edit Signature";
+                    clearSignatureBtn.disabled = false; // Ensure the button is not locked
+                }
+                setFormEditable(false); // Lock the form
+
+            } else {
+                showMessage("Please provide a signature first.", "error");
             }
         });
     }
@@ -1910,6 +1987,9 @@ function showInvoiceScreen(jobId) {
 
     // Populate invoice form fields
     populateInvoiceForm(job);
+
+    // Ensure the canvas is sized correctly now that it's visible
+    resizeCanvas();
 
     // Automatically fill warranty and plan info
     const planTypeInput = document.getElementById('planType');
