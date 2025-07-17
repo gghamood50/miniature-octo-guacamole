@@ -25,9 +25,29 @@ let currentWorkerAssignedJobs = []; // To store jobs for the current worker view
 let currentWorkerTechnicianName = ''; // To store current worker's name for view rendering
 let signaturePad = null;
 let confirmedSignatureDataURL = null;
-let isFormLocked = false; 
+let currentAppView = 'login'; // 'login', 'worker', 'admin'
+let currentUser = null;
+let currentAdminScreen = 'home'; // 'home', 'invoicesList', 'workers', 'invoiceWorkerSelect'
+let previousAppView = 'login';
+let currentFilteredWorker = null;
+let allAdminInvoicesCache = [];
+let currentlyViewedInvoiceData = null;
+let currentlySelectedWorker = null;
+
 
 // --- DOM Elements ---
+const loginScreen = document.getElementById('loginScreen');
+const workerHomeScreen = document.getElementById('workerHomeScreen');
+const adminHomeScreen = document.getElementById('adminHomeScreen');
+const adminInvoicesScreen = document.getElementById('adminInvoicesScreen');
+const adminWorkersScreen = document.getElementById('adminWorkersScreen');
+const settingsScreen = document.getElementById('settingsScreen');
+const adminInvoiceWorkerSelectScreen = document.getElementById('adminInvoiceWorkerSelectScreen');
+const invoiceViewModal = document.getElementById('invoiceViewModal');
+const workerDetailModal = document.getElementById('workerDetailModal');
+const confirmationModal = document.getElementById('confirmationModal');
+const adminBottomNav = document.getElementById('adminBottomNav');
+
 const jobsTableBody = document.getElementById('jobsTableBody');
 const jobsTable = document.getElementById('jobsTable');
 const technicianCardsContainer = document.getElementById('technician-cards-container');
@@ -76,6 +96,7 @@ const cancelLogPartUsageButton = document.getElementById('cancelLogPartUsage');
 const logPartUsageForm = document.getElementById('logPartUsageForm');
 const usageTechnicianSelect = document.getElementById('usageTechnician');
 const inventoryPartsDatalist = document.getElementById('inventoryPartsList');
+const downloadPdfBtn = document.getElementById('downloadPdfBtn');
 
 const dashboardUnscheduledJobsEl = document.getElementById('dashboardUnscheduledJobs');
 const dashboardScheduledJobsEl = document.getElementById('dashboardScheduledJobs');
@@ -104,6 +125,22 @@ const clearFormBtn = document.getElementById('clearFormBtn');
 const signatureCanvas = document.getElementById('signatureCanvas');
 const clearSignatureBtn = document.getElementById('clearSignatureBtn');
 const confirmSignatureBtn = document.getElementById('confirmSignatureBtn');
+const lineItemsContainer = document.getElementById('lineItemsContainer');
+const invoiceNumberDisplay = document.getElementById('invoiceNumberDisplay');
+const customTaxArea = document.getElementById('customTaxArea');
+const salesTaxRateInput = document.getElementById('salesTaxRate');
+const previewSignatureImg = document.getElementById('previewSignatureImg');
+const signaturePadContainer = document.getElementById('signaturePadContainer');
+const signedBySection = document.getElementById('signedBySection');
+const invoiceFormTitle = document.getElementById('invoiceFormTitle');
+const signatureLoadingMessage = document.getElementById('signatureLoadingMessage');
+const chequeNumberArea = document.getElementById('chequeNumberArea');
+const chequeNumberInput = document.getElementById('chequeNumber');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+const modalMarkPaidBtn = document.getElementById('modalMarkPaidBtn');
+const modalDownloadPdfBtn = document.getElementById('modalDownloadPdfBtn');
+const modalWorkerCloseBtn = document.getElementById('modalWorkerCloseBtn');
+const modalRemoveWorkerBtn = document.getElementById('modalRemoveWorkerBtn');
 
 
 // --- Render Functions ---
@@ -801,6 +838,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(createInvoiceBtnHome) createInvoiceBtnHome.addEventListener('click', () => showInvoiceFormScreen());
     if(settingsBtnWorker) settingsBtnWorker.addEventListener('click', showSettingsScreen);
+    
+    if (signatureCanvas) {
+        signaturePad = new SignaturePad(signatureCanvas, {
+            backgroundColor: 'rgb(255, 255, 255)'
+        });
+    }
+
+    function resizeCanvas() {
+        if (!signatureCanvas) return;
+        const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+        signatureCanvas.width = signatureCanvas.offsetWidth * ratio;
+        signatureCanvas.height = signatureCanvas.offsetHeight * ratio;
+        signatureCanvas.getContext("2d").scale(ratio, ratio);
+        if (signaturePad) {
+            signaturePad.clear(); // otherwise isEmpty() might return incorrect value
+        }
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    if (clearSignatureBtn) {
+        clearSignatureBtn.addEventListener('click', () => {
+            if (signaturePad) {
+                signaturePad.clear();
+                confirmedSignatureDataURL = null;
+            }
+        });
+    }
 
     if(seeAllAdminDashboard) seeAllAdminDashboard.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1709,6 +1775,102 @@ function initializeDanielAIChat() {
     });
 }
 
+function showMessage(message, type = 'info') {
+    const container = document.getElementById('message-container');
+    if (!container) {
+        const newContainer = document.createElement('div');
+        newContainer.id = 'message-container';
+        newContainer.style.position = 'fixed';
+        newContainer.style.top = '20px';
+        newContainer.style.right = '20px';
+        newContainer.style.zIndex = '10000';
+        document.body.appendChild(newContainer);
+    }
+
+    const messageElement = document.createElement('div');
+    messageElement.textContent = message;
+    messageElement.style.padding = '10px 20px';
+    messageElement.style.marginBottom = '10px';
+    messageElement.style.borderRadius = '5px';
+    messageElement.style.color = 'white';
+    messageElement.style.opacity = '0';
+    messageElement.style.transition = 'opacity 0.5s';
+
+    switch (type) {
+        case 'success':
+            messageElement.style.backgroundColor = '#059669';
+            break;
+        case 'error':
+            messageElement.style.backgroundColor = '#dc2626';
+            break;
+        default:
+            messageElement.style.backgroundColor = '#3b82f6';
+    }
+
+    document.getElementById('message-container').appendChild(messageElement);
+
+    setTimeout(() => {
+        messageElement.style.opacity = '1';
+    }, 10);
+
+    setTimeout(() => {
+        messageElement.style.opacity = '0';
+        setTimeout(() => {
+            messageElement.remove();
+            const container = document.getElementById('message-container');
+            if (container && container.childElementCount === 0) {
+                container.remove();
+            }
+        }, 500);
+    }, 5000);
+}
+
+function showConfirmationModal(title, message, onConfirm) {
+    const modal = document.getElementById('confirmationModal');
+    if (!modal) {
+        console.error("Confirmation modal not found in HTML.");
+        return;
+    }
+    
+    const titleEl = modal.querySelector('.modal-title');
+    const messageEl = modal.querySelector('.modal-body');
+    const confirmBtn = modal.querySelector('.confirm-btn');
+    const cancelBtn = modal.querySelector('.cancel-btn');
+
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.textContent = message;
+
+    // Clone and replace the confirm button to remove old event listeners
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+    const confirmHandler = () => {
+        onConfirm();
+        modal.style.display = 'none';
+    };
+
+    newConfirmBtn.addEventListener('click', confirmHandler);
+
+    const cancelHandler = () => {
+        modal.style.display = 'none';
+    };
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', cancelHandler, { once: true });
+    }
+
+    // Also close on outside click
+    const outsideClickHandler = (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            window.removeEventListener('click', outsideClickHandler);
+        }
+    };
+    window.addEventListener('click', outsideClickHandler);
+    
+    modal.style.display = 'block';
+}
+
 function showInvoiceScreen(jobId) {
     const job = allJobsData.find(j => j.id === jobId);
     if (!job) {
@@ -1738,39 +1900,96 @@ function showInvoiceScreen(jobId) {
     populateInvoiceForm(job);
 }
 
-function showPage(pageId) {
-    const allPages = [loginScreen, workerHomeScreen, adminHomeScreen, adminInvoicesScreen, adminWorkersScreen, settingsScreen, invoiceFormScreen, adminInvoiceWorkerSelectScreen];
-    const modalElements = [invoiceViewModal, workerDetailModal, confirmationModal];
-    const isTargetModal = modalElements.some(m => m && m.id === pageId);
+function generatePDF(data) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-    if (isTargetModal) {
-        modalElements.forEach(modal => {
-            if (modal && modal.id === pageId) {
-                modal.classList.remove('hidden');
-            }
-        });
-        if (adminBottomNav && pageId !== 'loginScreen') {
-            adminBottomNav.classList.add('hidden');
-        }
-    } else {
-        allPages.forEach(page => {
-            if (page && page.id === pageId) {
-                page.classList.remove('hidden');
-            } else if (page) {
-                page.classList.add('hidden');
-            }
-        });
-        modalElements.forEach(modal => {
-            if (modal) modal.classList.add('hidden');
-        });
+    // Add content to the PDF
+    doc.text(`Invoice #${data.invoiceNumber}`, 20, 20);
+    doc.text(`Date: ${data.invoiceDate}`, 20, 30);
+    doc.text(`Customer: ${data.customerName}`, 20, 40);
+    // ... add more data to the PDF as needed
 
-        if (adminBottomNav) {
-            if (currentAppView === 'admin' && (pageId === 'adminHomeScreen' || pageId === 'adminInvoicesScreen' || pageId === 'adminWorkersScreen' || pageId === 'adminInvoiceWorkerSelectScreen')) {
-                adminBottomNav.classList.remove('hidden');
-            } else {
-                adminBottomNav.classList.add('hidden');
-            }
+    return doc.output('datauristring');
+}
+
+async function saveInvoiceData(invoiceData, isUpdate = false, docId = null) {
+    try {
+        if (isUpdate && docId) {
+            await db.collection('invoices').doc(docId).update(invoiceData);
+        } else {
+            await db.collection('invoices').add(invoiceData);
         }
-        if (!isTargetModal) window.scrollTo(0, 0);
+        return true;
+    } catch (error) {
+        console.error("Error saving invoice data: ", error);
+        return false;
     }
+}
+
+function formatInvoiceNumber(num) {
+    return `SW${String(num).padStart(5, '0')}`;
+}
+
+function showAdminHomeScreen() {
+    switchView('dashboard');
+}
+
+function showWorkerHomeScreen() {
+    if (workerPwaView) workerPwaView.classList.remove('hidden');
+    if (layoutContainer) layoutContainer.style.display = 'none';
+    if (invoiceFormScreen) invoiceFormScreen.classList.add('hidden');
+}
+
+function showInvoiceListScreen() {
+    switchView('jobs');
+}
+
+function closeWorkerDetailModal() {
+    if(workerDetailModal) workerDetailModal.style.display = 'none';
+}
+
+function removeWorker(worker) {
+    showConfirmationModal(
+        "Remove Worker",
+        `Are you sure you want to remove ${worker.name}? This action cannot be undone.`,
+        async () => {
+            try {
+                await firebase.firestore().collection('technicians').doc(worker.id).delete();
+                showMessage(`${worker.name} has been removed.`, 'success');
+                closeWorkerDetailModal();
+            } catch (error) {
+                console.error("Error removing worker: ", error);
+                showMessage(`Error removing worker: ${error.message}`, 'error');
+            }
+        }
+    );
+}
+
+function loadAdminInvoicesListData() {
+    // This is a placeholder. In a real application, you would fetch and filter data here.
+    console.log("Loading admin invoices list data...");
+}
+
+function closeInvoiceViewModal() {
+    if(invoiceViewModal) invoiceViewModal.style.display = 'none';
+}
+
+function showAdminInvoiceWorkerSelectScreen() {
+    switchView('technicians');
+}
+
+function showAdminWorkersScreen() {
+    switchView('technicians');
+}
+
+function populateMonthFilter() {
+    // This is a placeholder. In a real application, you would populate the month filter based on the selected year.
+    console.log("Populating month filter...");
+}
+
+function handleAddWorker(event) {
+    event.preventDefault();
+    // This is a placeholder. In a real application, you would handle adding a new worker here.
+    console.log("Handling add worker...");
 }
