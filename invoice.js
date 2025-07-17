@@ -1,361 +1,269 @@
-body {
-    font-family: 'Inter', "Noto Sans", sans-serif;
-    background-color: #f8fafc;
-}
-.nav-link.active {
-    color: #047857;
-    background-color: #d1fae5;
-}
-.stat-card-stitch {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid #e2e8f0;
-    background-color: white;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.07);
-}
-.content-card-stitch {
-    border-radius: 0.75rem;
-    border: 1px solid #e2e8f0;
-    background-color: white;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.07);
-}
-.btn-primary-stitch {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: 0.375rem;
-    background-color: #059669;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
- .btn-primary-stitch:hover {
-    background-color: #047857;
-}
-.btn-primary-stitch:disabled {
-    background-color: #9ca3af;
-    cursor: not-allowed;
-}
-.btn-secondary-stitch {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    border-radius: 0.375rem;
-    background-color: #f0fdf4;
-    padding: 0.375rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
-    cursor: pointer;
-}
-.btn-approve-stitch {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    border-radius: 0.5rem;
-    background-color: #1e40af;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    transition: background-color 0.2s;
-}
-.btn-approve-stitch:hover {
-    background-color: #1d4ed8;
-}
-.btn-approve-stitch:disabled {
-    background-color: #9ca3af;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-.custom-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.custom-table th, .custom-table td {
-    text-align: left;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 0.875rem;
-}
-.custom-table th {
-    background-color: #f8fafc;
-    color: #334155;
-    font-weight: 600;
-}
-.custom-table tbody tr:hover {
-    background-color: #f1f5f9;
-}
-.status-pill {
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    display: inline-block;
-    white-space: nowrap;
-}
-.status-needs-scheduling { background-color: #fef3c7; color: #b45309; }
-.status-scheduled { background-color: #d1fae5; color: #065f46; } /* FIXED: Reverted to green */
-.status-awaiting-completion { background-color: #dbeafe; color: #1e40af; } /* FIXED: Set to blue */
-.status-completed { background-color: #dcfce7; color: #15803d; }
-.status-online, .status-available { background-color: #d1fae5; color: #065f46; }
-.status-offline { background-color: #e5e7eb; color: #4b5563; }
-.status-lowstock { background-color: #fee2e2; color: #b91c1c; }
-.status-instock { background-color: #dcfce7; color: #15803d; }
-.status-ordered { background-color: #e0e7ff; color: #3730a3; }
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5);
-}
-.modal-content {
-    background-color: #ffffff;
-    margin: 5% auto;
-    padding: 2rem;
-    border-radius: 0.75rem;
-    width: 90%;
-    max-width: 650px;
-}
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-}
-.modal-header h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-.close-button {
-    color: #94a3b8;
-    font-size: 1.75rem;
-    font-weight: bold;
-    cursor: pointer;
-}
-.form-input {
-    width: 100%;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
-.form-label {
-    display: block;
-    font-weight: 500;
-    color: #334155;
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
-}
-.vm { vertical-align: middle; }
+// --- START INVOICE.JS ---
 
-/* Styles for Daniel AI Chat UI */
-.chat-container {
-    display: flex; 
-    flex-direction: column;
-    border-radius: 0.75rem; 
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-}
-.chat-log {
-    flex-grow: 1; 
-    overflow-y: auto;
-    padding: 1rem; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 0.75rem;
-}
-.chat-bubble {
-    padding: 0.75rem 1rem; 
-    border-radius: 0.75rem; 
-    max-width: 85%;
-    line-height: 1.6; 
-    font-size: 0.875rem;
-}
-.chat-bubble-user {
-    background-color: #059669; 
-    color: white; 
-    align-self: flex-end; 
-    border-bottom-right-radius: 0.25rem; 
-}
-.chat-bubble-ai {
-    background-color: #e2e8f0; 
-    color: #1e293b; 
-    align-self: flex-start; 
-    border-bottom-left-radius: 0.25rem; 
-}
-.chat-input-area {
-    display: flex; 
-    padding: 1rem; 
-    border-top: 1px solid #e2e8f0; 
-}
-#chatInput.chat-input {
-    flex-grow: 1;
-    border: 1px solid #cbd5e1; 
-    border-radius: 0.375rem; 
-    padding: 0.625rem 0.75rem; 
-    margin-right: 0.5rem; 
-}
-#sendChatButton.chat-send-btn {
-    background-color: #059669; 
-    color: white; 
-    border-radius: 0.375rem; 
-    padding: 0.625rem 1rem; 
-    font-weight: 500; 
-    cursor: pointer;
-}
-#sendChatButton.chat-send-btn:hover {
-    background-color: #047857; 
-}
-#sendChatButton:disabled {
-    background-color: #9ca3af;
-    cursor: not-allowed;
-}
-.chat-bubble-ai.processing-bubble .spinner {
-    display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid rgba(0,0,0,0.2);
-    border-top-color: #1e293b;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-}
-@keyframes spin {
-    to { transform: rotate(360deg); }
+function setInitialDate() {
+    const invoiceDateInput = document.getElementById('invoiceDate');
+    if(invoiceDateInput) invoiceDateInput.value = new Date().toISOString().split('T')[0];
 }
 
-/* Latest Jobs Animation */
-.latest-job-item {
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transition-delay: var(--animation-delay, 0s); /* Allow staggered animation */
+let lineItemCount = 0;
+function addLineItem(description = '', quantity = '', price = '') {
+    lineItemCount++;
+    const lineItemsContainer = document.getElementById('lineItemsContainer');
+    const newItemHtml = `
+        <div class="line-item p-3 border border-gray-200 rounded-md bg-gray-50" id="item-${lineItemCount}">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+                <div class="md:col-span-6">
+                    <input type="text" value="${description}" name="itemDescription-${lineItemCount}" class="form-input mt-1 text-sm" placeholder="Service or Product">
+                </div>
+                <div class="md:col-span-2">
+                    <input type="number" value="${quantity}" name="itemQuantity-${lineItemCount}" class="form-input mt-1 text-sm text-right" min="0" step="any" placeholder="1">
+                </div>
+                <div class="md:col-span-2">
+                    <input type="number" value="${price}" name="itemPrice-${lineItemCount}" class="form-input mt-1 text-sm text-right" min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="md:col-span-1 text-right self-center">
+                    <span id="itemTotal-${lineItemCount}" class="text-sm font-medium text-gray-700">$0.00</span>
+                </div>
+                <div class="md:col-span-1 text-right self-center">
+                    <button type="button" class="removeItemBtn btn btn-danger btn-sm p-2 text-xs" data-itemid="${lineItemCount}">&times;</button>
+                </div>
+            </div>
+        </div>`;
+    if(lineItemsContainer) lineItemsContainer.insertAdjacentHTML('beforeend', newItemHtml);
+    attachLineItemListeners(lineItemCount);
+    updateLineItemTotal(lineItemCount);
+    updateTotals();
 }
-.latest-job-item-visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-                    .toggle-checkbox:checked {
-                        /* @apply: right-0 border-green-600; */
-                        right: 0;
-                        border-color: #059669; /* Tailwind green-600 */
-                    }
-                    .toggle-checkbox:checked + .toggle-label {
-                        /* @apply: bg-green-600; */
-                        background-color: #059669; /* Tailwind green-600 */
-                    }
 
-/* Invoice specific styles */
-#invoiceFormScreen .page-header {
-    background-color: #1f2937; /* gray-800 */
-    color: #f9fafb; /* gray-50 */
-    padding: 1rem 1.5rem;
-    border-bottom: 4px solid #059669; /* green-600 */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+function updateTotals() {
+    const subtotalDisplay = document.getElementById('subtotalDisplay');
+    const totalDisplay = document.getElementById('totalDisplay');
+    const laborInput = document.getElementById('labor');
+    const serviceCallInput = document.getElementById('serviceCall');
+    const salesTaxRateInput = document.getElementById('salesTaxRate');
+    const salesTaxAmountDisplay = document.getElementById('salesTaxAmountDisplay');
+
+    let subtotal = 0;
+    document.querySelectorAll('.line-item').forEach(item => {
+        const id = item.id.split('-')[1];
+        const quantityEl = document.querySelector(`[name=itemQuantity-${id}]`);
+        const priceEl = document.querySelector(`[name=itemPrice-${id}]`);
+        if (quantityEl && priceEl) {
+            subtotal += (parseFloat(quantityEl.value) || 0) * (parseFloat(priceEl.value) || 0);
+        }
+    });
+    if(subtotalDisplay) subtotalDisplay.textContent = formatCurrency(subtotal);
+    const labor = laborInput ? (parseFloat(laborInput.value) || 0) : 0;
+    const serviceCall = serviceCallInput ? (parseFloat(serviceCallInput.value) || 0) : 0;
+    const taxRate = salesTaxRateInput ? (parseFloat(salesTaxRateInput.value) || 0) : 0;
+    const salesTaxAmount = subtotal * (taxRate / 100);
+    if(salesTaxAmountDisplay) salesTaxAmountDisplay.textContent = formatCurrency(salesTaxAmount);
+    if(totalDisplay) totalDisplay.textContent = formatCurrency(subtotal + labor + serviceCall + salesTaxAmount);
 }
-#invoiceFormScreen .btn-back {
-    color: #f9fafb; /* gray-50 */
-    background: none;
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
+
+function initializeSignaturePad() {
+    const signatureCanvas = document.getElementById('signatureCanvas');
+    if (typeof SignaturePad === 'undefined') {
+        console.error("SignaturePad library is not loaded.");
+        return;
+    }
+    if (signatureCanvas && !signaturePad) {
+        signaturePad = new SignaturePad(signatureCanvas, {
+            backgroundColor: 'rgb(255, 255, 255)',
+            penColor: 'rgb(0, 0, 0)'
+        });
+        window.addEventListener("resize", () => resizeCanvas());
+    }
 }
-#invoiceFormScreen h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
+
+function setFormEditable(editable) {
+    const invoiceFormEl = document.getElementById('invoiceForm');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const clearFormBtn = document.getElementById('clearFormBtn');
+    isFormLocked = !editable;
+    const formElements = invoiceFormEl.elements;
+    for (let i = 0; i < formElements.length; i++) {
+        const element = formElements[i];
+        if (element.id !== 'invoiceNumberDisplay' && element.id !== 'salesTaxRate') {
+            element.readOnly = !editable;
+            element.disabled = !editable;
+            if(!editable) {
+                element.classList.add('bg-gray-100', 'cursor-not-allowed');
+            } else {
+                element.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+        }
+    }
+    if (addItemBtn) addItemBtn.disabled = !editable;
+    document.querySelectorAll('.removeItemBtn').forEach(btn => btn.disabled = !editable);
+    if (clearFormBtn) clearFormBtn.disabled = !editable;
+    if (signaturePad) {
+        if (editable) signaturePad.on();
+        else signaturePad.off(); 
+    }
 }
-.invoice-form-content {
-    padding: 1rem;
+
+function resizeCanvas() {
+    const signatureCanvas = document.getElementById('signatureCanvas');
+    const signaturePadContainer = document.querySelector('.signature-pad-container');
+    if (!signatureCanvas || !signaturePad) return;
+    if (signaturePadContainer && signaturePadContainer.offsetParent === null) return;
+    const containerWidth = signaturePadContainer.offsetWidth;
+    if (containerWidth === 0) return;
+    const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+    signatureCanvas.width = containerWidth * ratio;
+    signatureCanvas.height = 150 * ratio; 
+    const ctx = signatureCanvas.getContext("2d");
+    if (ctx) {
+        ctx.scale(ratio, ratio);
+    }
+    signaturePad.clear();
 }
-#invoiceFormScreen .card {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 1.5rem;
-    padding: 1.5rem;
+
+function attachLineItemListeners(id) {
+    const quantityInput = document.querySelector(`[name=itemQuantity-${id}]`);
+    const priceInput = document.querySelector(`[name=itemPrice-${id}]`);
+    const removeItemButton = document.querySelector(`#item-${id} .removeItemBtn`);
+    if(quantityInput && priceInput) {
+        [quantityInput, priceInput].forEach(input => {
+            input.addEventListener('input', () => {
+                updateLineItemTotal(id);
+                updateTotals();
+            });
+        });
+    }
+    if (removeItemButton) {
+        removeItemButton.addEventListener('click', () => {
+            const itemToRemove = document.getElementById(`item-${id}`);
+            if(itemToRemove) itemToRemove.remove();
+            updateTotals();
+        });
+    }
 }
-#invoiceFormScreen .form-label {
-    font-weight: 600;
-    color: #374151; /* gray-700 */
+
+function updateLineItemTotal(id) {
+    const quantityEl = document.querySelector(`[name=itemQuantity-${id}]`);
+    const priceEl = document.querySelector(`[name=itemPrice-${id}]`);
+    if (!quantityEl || !priceEl) return;
+    const quantity = parseFloat(quantityEl.value) || 0;
+    const price = parseFloat(priceEl.value) || 0;
+    const itemTotalEl = document.getElementById(`itemTotal-${id}`);
+    if(itemTotalEl) itemTotalEl.textContent = formatCurrency(quantity * price);
 }
-#invoiceFormScreen .form-input {
-    border-color: #D1D5DB; /* gray-300 */
+
+function collectInvoiceData(autoGeneratedInvoiceNumber) {
+    const invoiceFormEl = document.getElementById('invoiceForm');
+    const chequeNumberInput = document.getElementById('chequeNumber');
+    const formData = new FormData(invoiceFormEl);
+    const selectedCountyTaxRadio = document.querySelector('input[name="countyTax"]:checked');
+    const paymentMethodRadio = document.querySelector('input[name="paymentMethod"]:checked');
+    let selectedCountyValue = selectedCountyTaxRadio ? selectedCountyTaxRadio.value : null;
+    if (selectedCountyValue === 'Other') {
+        selectedCountyValue = formData.get('customAreaName') || 'Custom';
+    }
+    const invoiceData = {
+        invoiceNumber: autoGeneratedInvoiceNumber, 
+        invoiceDate: formData.get('invoiceDate'),
+        poNumber: formData.get('poNumber'),
+        selectedCountyTax: selectedCountyValue, 
+        planType: formData.get('planType'), 
+        warrantyName: formData.get('warrantyName'), 
+        customerName: document.getElementById('customerName').value.trim(),
+        customerEmail: formData.get('customerEmail'), 
+        customerPhone: formData.get('customerPhone'),
+        customerAddress: document.getElementById('customerAddress').value,
+        jobAddress: document.getElementById('jobAddress').value,
+        typeOfEquipment: document.getElementById('typeOfEquipment').value,
+        jobDescription: document.getElementById('jobDescription').value,
+        recommendations: document.getElementById('recommendations').value,
+        nonCoveredItems: document.getElementById('nonCoveredItemsText').value.trim(),
+        paymentMethod: paymentMethodRadio ? paymentMethodRadio.value : null,
+        chequeNumber: paymentMethodRadio && paymentMethodRadio.value === 'Cheque' ? chequeNumberInput.value.trim() : null,
+        items: [],
+        labor: (parseFloat(document.getElementById('labor').value) || 0),
+        serviceCall: (parseFloat(document.getElementById('serviceCall').value) || 0),
+        salesTaxRate: parseFloat(document.getElementById('salesTaxRate').value) || 0, 
+        salesTaxAmount: 0,
+        subtotal: 0,
+        total: 0,
+        status: 'pending', 
+        signatureDataURL: confirmedSignatureDataURL, 
+        signedBy: confirmedSignatureDataURL ? (document.getElementById('customerName')?.value.trim() || "Customer") : null,
+    };
+    let currentSubtotal = 0;
+    document.querySelectorAll('.line-item').forEach(item => {
+        const id = item.id.split('-')[1];
+        const descriptionEl = document.querySelector(`[name=itemDescription-${id}]`);
+        const quantityEl = document.querySelector(`[name=itemQuantity-${id}]`);
+        const priceEl = document.querySelector(`[name=itemPrice-${id}]`);
+        if(descriptionEl && quantityEl && priceEl){
+            const description = descriptionEl.value;
+            const quantity = parseFloat(quantityEl.value) || 0;
+            const price = parseFloat(priceEl.value) || 0;
+            invoiceData.items.push({ description, quantity, price, total: quantity * price });
+            currentSubtotal += quantity * price;
+        }
+    });
+    invoiceData.subtotal = currentSubtotal;
+    if (auth.currentUser && auth.currentUser.uid) {
+        invoiceData.createdByWorkerId = auth.currentUser.uid;
+        invoiceData.workerName = auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : 'N/A');
+    }
+    invoiceData.salesTaxAmount = invoiceData.subtotal * (invoiceData.salesTaxRate / 100);
+    invoiceData.total = invoiceData.subtotal + invoiceData.labor + invoiceData.serviceCall + invoiceData.salesTaxAmount;
+    return invoiceData;
 }
-#invoiceFormScreen .form-input:focus {
-    border-color: #059669; /* green-600 */
-    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.3);
+
+function populateInvoiceForm(job) {
+    console.log("Populating invoice form with job data:", job);
+
+    const invoiceFormEl = document.getElementById('invoiceForm');
+    const lineItemsContainer = document.getElementById('lineItemsContainer');
+    const salesTaxRateInput = document.getElementById('salesTaxRate');
+    const customTaxArea = document.getElementById('customTaxArea');
+    const chequeNumberArea = document.getElementById('chequeNumberArea');
+
+    // Reset form to a clean state
+    if(invoiceFormEl) invoiceFormEl.reset();
+    if(lineItemsContainer) lineItemsContainer.innerHTML = '';
+    
+    // Set customer and job details
+    document.getElementById('customerName').value = job.customer || '';
+    document.getElementById('customerAddress').value = job.address || '';
+    document.getElementById('customerPhone').value = job.phone || '';
+    document.getElementById('jobAddress').value = job.address || ''; // Assuming job address is same as customer address
+    
+    document.getElementById('poNumber').value = job.dispatchOrPoNumber || '';
+    
+    // Auto-fill warranty details
+    document.getElementById('planType').value = job.planType || '';
+    document.getElementById('warrantyName').value = job.warrantyName || '';
+
+    // Set other fields to default/initial states
+    setInitialDate();
+    if (salesTaxRateInput) salesTaxRateInput.value = "0.00";
+    if (customTaxArea) customTaxArea.classList.add('hidden');
+    if (chequeNumberArea) chequeNumberArea.classList.add('hidden');
+
+    // Add a default line item
+    addLineItem();
+    
+    // Recalculate totals
+    updateTotals();
+
+    // Initialize signature pad
+    if (!signaturePad) {
+        initializeSignaturePad();
+    } else {
+        signaturePad.clear();
+    }
+    
+    // Ensure form is editable
+    setFormEditable(true);
 }
-#invoiceFormScreen .signature-pad-container {
-    border: 2px dashed #D1D5DB; /* gray-300 */
-    border-radius: 8px;
-    position: relative;
-    height: 150px;
+
+function formatCurrency(amount) {
+    return `$${parseFloat(amount || 0).toFixed(2)}`;
 }
-#signatureCanvas {
-    width: 100%;
-    height: 100%;
-}
-#invoiceFormScreen .form-actions {
-    background-color: #fff;
-    border-top: 1px solid #E5E7EB; /* gray-200 */
-    padding: 1rem 1.5rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    position: sticky;
-    bottom: 0;
-    z-index: 50;
-}
-.btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.btn-primary {
-    background-color: #059669; /* green-600 */
-    color: white;
-}
-.btn-primary:hover {
-    background-color: #047857; /* green-700 */
-}
-.btn-secondary {
-    background-color: #e5e7eb; /* gray-200 */
-    color: #1f2937; /* gray-800 */
-}
-.btn-secondary:hover {
-    background-color: #d1d5db; /* gray-300 */
-}
-.btn-danger {
-    background-color: #dc2626; /* red-600 */
-    color: white;
-}
-.btn-danger:hover {
-    background-color: #b91c1c; /* red-700 */
-}
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
+
+// --- END INVOICE.JS ---
