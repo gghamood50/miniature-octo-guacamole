@@ -1898,6 +1898,17 @@ function showInvoiceScreen(jobId) {
 
     // Populate invoice form fields
     populateInvoiceForm(job);
+
+    // Automatically fill warranty and plan info
+    const planTypeInput = document.getElementById('planType');
+    const warrantyNameInput = document.getElementById('warrantyName');
+
+    if (planTypeInput) {
+        planTypeInput.value = job.planType || '';
+    }
+    if (warrantyNameInput) {
+        warrantyNameInput.value = job.warrantyProvider || '';
+    }
 }
 
 function generatePDF(data) {
