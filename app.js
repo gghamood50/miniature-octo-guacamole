@@ -1934,7 +1934,7 @@ function showConfirmationModal(title, message, onConfirm) {
     modal.style.display = 'block';
 }
 
-function showInvoiceScreen(jobId) {
+async function showInvoiceScreen(jobId) {
     const job = allJobsData.find(j => j.id === jobId);
     if (!job) {
         console.error("Job not found for invoice creation:", jobId);
@@ -1946,8 +1946,6 @@ function showInvoiceScreen(jobId) {
     if (layoutContainer) layoutContainer.style.display = 'none';
     if (workerPwaView) workerPwaView.classList.add('hidden');
 
-    // --- START: CORRECTED CODE ---
-    
     // Find the invoice screen using the correct ID
     const invoiceScreen = document.getElementById('invoiceFormScreen');
 
@@ -1955,12 +1953,9 @@ function showInvoiceScreen(jobId) {
     if (invoiceScreen) {
         invoiceScreen.classList.remove('hidden');
     } else {
-        // Log an error if the screen is missing, which helps in future debugging
         console.error("Fatal Error: The invoice form screen could not be found in the DOM.");
-        return; // Stop the function if the main element is missing
+        return;
     }
-    
-    // --- END: CORRECTED CODE ---
 
     // Populate invoice form fields
     populateInvoiceForm(job);
@@ -1978,6 +1973,21 @@ function showInvoiceScreen(jobId) {
     if (warrantyNameInput) {
         warrantyNameInput.value = job.warrantyProvider || '';
     }
+
+    // Fetch and display the next invoice number
+    if(invoiceNumberDisplay) invoiceNumberDisplay.value = "Loading next...";
+    try {
+        const counterRef = db.collection('counters').doc('invoiceCounter');
+        const counterDoc = await counterRef.get();
+        let nextNumber = 1;
+        if (counterDoc.exists && counterDoc.data().lastNumber) {
+            nextNumber = counterDoc.data().lastNumber + 1;
+        }
+        if(invoiceNumberDisplay) invoiceNumberDisplay.value = formatInvoiceNumber(nextNumber);
+    } catch (error) {
+        console.error("Error fetching next invoice number:", error);
+        if(invoiceNumberDisplay) invoiceNumberDisplay.value = "Error loading #";
+    }
 }
 
 function generatePDF(data) {
@@ -1993,18 +2003,73 @@ function generatePDF(data) {
     return doc.output('datauristring');
 }
 
-async function saveInvoiceData(invoiceData, isUpdate = false, docId = null) {
+async function saveInvoiceData(invoiceDataToSave, isSilent = false, invoiceId = null) {
+    console.log("Attempting to save invoice data. Passed invoiceId:", invoiceId, "Data:", invoiceDataToSave);
+    if (!invoiceDataToSave.invoiceNumber || !invoiceDataToSave.customerName || !invoiceDataToSave.customerEmail) {
+        if (!isSilent) showMessage('Invoice #, Customer Name, and Email are required.', 'error');
+        return false;
+    }
+    if (!invoiceDataToSave.paymentMethod) {
+        if (!isSilent) showMessage('A payment method is required.', 'error');
+        return false;
+    }
+    if (invoiceDataToSave.paymentMethod === 'Cheque' && !invoiceDataToSave.chequeNumber) {
+        if (!isSilent) showMessage('Cheque # is required for cheque payments.', 'error');
+        return false;
+    }
+
+    const effectiveInvoiceId = invoiceId; 
+    console.log("Using effectiveInvoiceId for save/update:", effectiveInvoiceId);
+
+    const timestamp = new Date().toISOString();
+    if (effectiveInvoiceId) { 
+        invoiceDataToSave.updatedAt = timestamp;
+        if (!invoiceDataToSave.createdAt) { 
+             console.warn("createdAt missing during update.");
+             try {
+                const originalDoc = await db.collection('invoices').doc(effectiveInvoiceId).get();
+                if (originalDoc.exists && originalDoc.data().createdAt) {
+                    invoiceDataToSave.createdAt = originalDoc.data().createdAt;
+                } else {
+                    invoiceDataToSave.createdAt = timestamp; 
+                }
+             } catch (e) {
+                console.error("Error fetching original doc for createdAt:", e);
+                invoiceDataToSave.createdAt = timestamp;
+             }
+        }
+    } else { 
+        invoiceDataToSave.createdAt = timestamp;
+        invoiceDataToSave.updatedAt = timestamp; 
+    }
+
     try {
-        if (isUpdate && docId) {
-            await db.collection('invoices').doc(docId).update(invoiceData);
-        } else {
-            await db.collection('invoices').add(invoiceData);
+        if (effectiveInvoiceId) { 
+            console.log("Updating existing invoice in Firestore:", effectiveInvoiceId);
+            const invoiceRef = db.collection('invoices').doc(effectiveInvoiceId);
+            await invoiceRef.set(invoiceDataToSave, { merge: true }); 
+
+            if (!isSilent) {
+                showMessage('Invoice updated successfully!', 'success');
+            }
+        } else { 
+            console.log("Adding new invoice to Firestore");
+            const docRef = await db.collection('invoices').add(invoiceDataToSave);
+            
+            if (!isSilent) {
+                showMessage('Invoice saved successfully!', 'success');
+            }
         }
         return true;
     } catch (error) {
-        console.error("Error saving invoice data: ", error);
+        console.error("Error saving invoice to Firestore:", error);
+        if (!isSilent) showMessage('Error: Could not save to database.', 'error');
         return false;
     }
+}
+
+function formatInvoiceNumber(num) {
+    return `${String(num).padStart(5, '0')}`;
 }
 
 function formatInvoiceNumber(num) {
