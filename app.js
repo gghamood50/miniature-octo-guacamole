@@ -33,6 +33,7 @@ let currentFilteredWorker = null;
 let allAdminInvoicesCache = [];
 let currentlyViewedInvoiceData = null;
 let currentlySelectedWorker = null;
+let pendingInvoices = [];
 
 
 // --- DOM Elements ---
@@ -107,6 +108,7 @@ const dashboardLatestJobsListEl = document.getElementById('dashboardLatestJobsLi
 const chatLog = document.getElementById('chatLog');
 const chatInput = document.getElementById('chatInput');
 const sendChatButton = document.getElementById('sendChatButton');
+    const sendAllInvoicesBtn = document.getElementById('sendAllInvoicesBtn');
 
 // --- Worker PWA DOM Elements ---
 const workerPwaView = document.getElementById('workerPwaView');
@@ -1041,58 +1043,10 @@ document.addEventListener('DOMContentLoaded', () => {
              return;
         }
 
-        saveInvoiceBtn.disabled = true; 
-        saveInvoiceBtn.textContent = 'Saving...';
-
-        try {
-            await db.runTransaction(async (transaction) => {
-                const counterRef = db.collection('counters').doc('invoiceCounter');
-                const counterDoc = await transaction.get(counterRef);
-
-                let nextNumber = 1;
-                if (counterDoc.exists && counterDoc.data().lastNumber) {
-                    nextNumber = counterDoc.data().lastNumber + 1;
-                }
-                const formattedInvoiceNumber = formatInvoiceNumber(nextNumber);
-
-                const dataToSave = collectInvoiceData(formattedInvoiceNumber); 
-                if (!dataToSave.customerName || !dataToSave.customerEmail) {
-                    throw new Error('Customer Name and Email are required.');
-                }
-                
-                dataToSave.pdfDataURL = generatePDF(dataToSave);
-                if (!dataToSave.pdfDataURL) {
-                    showMessage('Failed to generate PDF data. Invoice will be saved without PDF.', 'warning');
-                }
-
-                const newInvoiceRef = db.collection('invoices').doc(); 
-                transaction.set(newInvoiceRef, dataToSave);
-                
-                transaction.set(counterRef, { lastNumber: nextNumber }, { merge: true });
-            });
-
-            showMessage('Invoice saved successfully!', 'success');
-            currentEditingInvoiceId = null; 
-            confirmedSignatureDataURL = null;
-            isFormLocked = false; 
-            
-            if (currentAppView === 'worker') {
-                 showWorkerHomeScreen();
-            } else if (currentAppView === 'admin') {
-                 allAdminInvoicesCache = [];
-                if (currentAdminScreen === 'invoicesList') showInvoiceListScreen();
-                else showAdminHomeScreen(); 
-            } else { 
-                showWorkerHomeScreen();
-            }
-
-        } catch (error) {
-            console.error("Error in save invoice transaction:", error);
-            showMessage("Error saving invoice: " + error.message, "error");
-        } finally {
-            saveInvoiceBtn.disabled = false;
-            saveInvoiceBtn.textContent = 'Save Invoice';
-        }
+        const dataToSave = collectInvoiceData("PENDING");
+        pendingInvoices.push(dataToSave);
+        showMessage('Invoice added to queue.', 'success');
+        showAfterSendInvoiceScreen();
     });
     
 
@@ -1136,11 +1090,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     signaturePad.clear();
                     signaturePad.on();
                 }
-                if(previewSignatureImg) previewSignatureImg.classList.add('hidden');
+                if(previewSignatureImg) {
+                    previewSignatureImg.classList.add('hidden');
+                    previewSignatureImg.src = '#';
+                }
                 if(signaturePadContainer) signaturePadContainer.classList.remove('hidden');
                 if(signedBySection) signedBySection.classList.add('hidden');
                 if(confirmSignatureBtn) confirmSignatureBtn.classList.remove('hidden');
-                if(clearSignatureBtn) clearSignatureBtn.textContent = "Clear Signature";
+                if(clearSignatureBtn) clearSignatureBtn.classList.remove('hidden');
+                
+                const editSignatureBtn = document.getElementById('editSignatureBtn');
+                if(editSignatureBtn) editSignatureBtn.classList.add('hidden');
+
 
                 if(signatureLoadingMessage) signatureLoadingMessage.classList.remove('hidden');
                 requestAnimationFrame(() => {
@@ -1633,6 +1594,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (sendAllInvoicesBtn) {
+        sendAllInvoicesBtn.addEventListener('click', async () => {
+            if (pendingInvoices.length === 0) {
+                showMessage("No invoices to send.", "info");
+                return;
+            }
+
+            sendAllInvoicesBtn.disabled = true;
+            sendAllInvoicesBtn.textContent = 'Sending...';
+
+            try {
+                for (const invoice of pendingInvoices) {
+                    await db.runTransaction(async (transaction) => {
+                        const counterRef = db.collection('counters').doc('invoiceCounter');
+                        const counterDoc = await transaction.get(counterRef);
+
+                        let nextNumber = 1;
+                        if (counterDoc.exists && counterDoc.data().lastNumber) {
+                            nextNumber = counterDoc.data().lastNumber + 1;
+                        }
+                        const formattedInvoiceNumber = formatInvoiceNumber(nextNumber);
+                        invoice.invoiceNumber = formattedInvoiceNumber;
+                        
+                        invoice.pdfDataURL = generatePDF(invoice);
+                        if (!invoice.pdfDataURL) {
+                            showMessage(`Failed to generate PDF for ${invoice.customerName}. It will be saved without a PDF.`, 'warning');
+                        }
+
+                        const newInvoiceRef = db.collection('invoices').doc();
+                        transaction.set(newInvoiceRef, invoice);
+                        transaction.set(counterRef, { lastNumber: nextNumber }, { merge: true });
+                    });
+                }
+
+                showMessage('All invoices sent successfully!', 'success');
+                pendingInvoices = [];
+                showWorkerHomeScreen();
+
+            } catch (error) {
+                console.error("Error sending invoices:", error);
+                showMessage("Error sending invoices: " + error.message, "error");
+            } finally {
+                sendAllInvoicesBtn.disabled = false;
+                sendAllInvoicesBtn.textContent = 'Send All Invoices to Office';
+            }
+        });
+    }
+
     // Initialize Firebase and Auth State Change Listener
     try {
         if (!firebase.apps.length) {
@@ -2084,6 +2093,8 @@ function showWorkerHomeScreen() {
     if (workerPwaView) workerPwaView.classList.remove('hidden');
     if (layoutContainer) layoutContainer.style.display = 'none';
     if (invoiceFormScreen) invoiceFormScreen.classList.add('hidden');
+    const afterSendInvoiceScreen = document.getElementById('afterSendInvoiceScreen');
+    if (afterSendInvoiceScreen) afterSendInvoiceScreen.classList.add('hidden');
 }
 
 function showInvoiceListScreen() {
@@ -2404,6 +2415,49 @@ function populateInvoiceForm(job) {
     
     // Ensure form is editable
     setFormEditable(true);
+}
+
+function showAfterSendInvoiceScreen() {
+    invoiceFormScreen.classList.add('hidden');
+    workerPwaView.classList.add('hidden');
+    const afterSendInvoiceScreen = document.getElementById('afterSendInvoiceScreen');
+    afterSendInvoiceScreen.classList.remove('hidden');
+
+    const pendingInvoicesList = document.getElementById('pendingInvoicesList');
+    pendingInvoicesList.innerHTML = '';
+
+    if (pendingInvoices.length === 0) {
+        pendingInvoicesList.innerHTML = '<p class="text-center text-slate-500 p-4">No pending invoices.</p>';
+        return;
+    }
+
+    let customerName = '';
+    pendingInvoices.forEach((invoice, index) => {
+        if (invoice.customerName) {
+            customerName = invoice.customerName;
+        }
+        const invoiceCard = `
+            <div class="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2">
+              <div class="text-[#111518] flex items-center justify-center rounded-lg bg-[#f0f2f5] shrink-0 size-12" data-icon="File" data-size="24px" data-weight="regular">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                  <path
+                    d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z"
+                  ></path>
+                </svg>
+              </div>
+              <div class="flex flex-col justify-center">
+                <p class="text-[#111518] text-base font-medium leading-normal line-clamp-1">Invoice for ${invoice.customerName}</p>
+                <p class="text-[#60768a] text-sm font-normal leading-normal line-clamp-2">Total: ${formatCurrency(invoice.total)}</p>
+              </div>
+            </div>
+        `;
+        pendingInvoicesList.insertAdjacentHTML('beforeend', invoiceCard);
+    });
+
+    const afterSendInvoiceTitle = document.getElementById('afterSendInvoiceTitle');
+    if (afterSendInvoiceTitle) {
+        afterSendInvoiceTitle.textContent = `Invoices for ${customerName}`;
+    }
 }
 
 function formatCurrency(amount) {
