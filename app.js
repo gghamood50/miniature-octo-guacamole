@@ -34,6 +34,8 @@ let allAdminInvoicesCache = [];
 let currentlyViewedInvoiceData = null;
 let currentlySelectedWorker = null;
 let pendingInvoices = [];
+let currentJobIdForInvoicing = null;
+let allWarrantiesData = [];
 
 
 // --- DOM Elements ---
@@ -331,6 +333,44 @@ function renderInventory(items) {
     if (inventoryPartsDatalist) {
         inventoryPartsDatalist.innerHTML = items.map(item => `<option value="${item.sku}">${item.partName}</option>`).join('');
     }
+}
+
+function listenForWarranties() {
+    const warrantiesQuery = firebase.firestore().collection("warranties").orderBy("completionDate", "desc");
+    warrantiesQuery.onSnapshot((snapshot) => {
+        allWarrantiesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderWarranties(allWarrantiesData);
+    }, (error) => {
+        console.error("Error listening for warranties:", error);
+    });
+}
+
+function renderWarranties(warranties) {
+    const warrantyTableBody = document.getElementById('warrantyTableBody');
+    if (!warrantyTableBody) return;
+
+    warrantyTableBody.innerHTML = '';
+
+    if (warranties.length === 0) {
+        warrantyTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-500 py-4">No warranties found.</td></tr>`;
+        return;
+    }
+
+    warrantyTableBody.innerHTML = warranties.map(warranty => {
+        const completionDate = warranty.completionDate && typeof warranty.completionDate.toDate === 'function' 
+            ? warranty.completionDate.toDate().toLocaleDateString() 
+            : 'N/A';
+            
+        return `
+            <tr>
+                <td class="font-medium text-slate-800">${warranty.job.customer || 'N/A'}</td>
+                <td>${warranty.job.address || 'N/A'}</td>
+                <td>${completionDate}</td>
+                <td>${warranty.job.assignedTechnicianName || 'N/A'}</td>
+                <td><button class="btn-secondary-stitch view-warranty-btn" data-id="${warranty.id}">View Details</button></td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function populateTechnicianDropdowns() {
@@ -1405,7 +1445,85 @@ document.addEventListener('DOMContentLoaded', () => {
             const jobId = event.target.dataset.id;
             showInvoiceScreen(jobId);
         }
+        if (event.target.classList.contains('view-warranty-btn')) {
+            const warrantyId = event.target.dataset.id;
+            const warrantyData = allWarrantiesData.find(w => w.id === warrantyId);
+            if(warrantyData) openWarrantyDetailModal(warrantyData);
+        }
     });
+
+function openWarrantyDetailModal(warranty) {
+    const modal = document.getElementById('warrantyDetailModal');
+    if (!modal) return;
+
+    // --- Populate all Job Details ---
+    const job = warranty.job || {}; // Use an empty object as a fallback
+    document.getElementById('modalWarrantyCustomerName').textContent = job.customer || 'N/A';
+    document.getElementById('modalWarrantyAddress').textContent = job.address || 'N/A';
+    document.getElementById('modalWarrantyPhone').textContent = job.phone || 'N/A';
+    document.getElementById('modalWarrantyTechnician').textContent = job.assignedTechnicianName || 'N/A';
+    document.getElementById('modalWarrantyJobIssue').textContent = job.issue || 'N/A';
+    document.getElementById('modalWarrantyDispatchOrPoNumber').textContent = job.dispatchOrPoNumber || 'N/A';
+    document.getElementById('modalWarrantyPlanType').textContent = job.planType || 'N/A';
+    document.getElementById('modalWarrantyProvider').textContent = job.warrantyProvider || 'N/A';
+
+    // --- Robust Date Formatting ---
+    let formattedDate = 'N/A';
+    if (warranty.completionDate && typeof warranty.completionDate.toDate === 'function') {
+        // This handles Firebase Timestamps correctly
+        formattedDate = warranty.completionDate.toDate().toLocaleString(undefined, {
+            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+    }
+    document.getElementById('modalWarrantyCompletionDate').textContent = formattedDate;
+
+    // --- Populate Invoices and Signatures ---
+    const invoicesContainer = document.getElementById('modalWarrantyInvoicesContainer');
+    invoicesContainer.innerHTML = '';
+
+    if (warranty.invoices && warranty.invoices.length > 0) {
+        warranty.invoices.forEach(invoice => {
+            const signatureHTML = invoice.signatureDataURL
+                ? `<img src="${invoice.signatureDataURL}" alt="Signature" class="signature-image-modal">`
+                : '<p class="text-sm text-slate-500 mt-2">No signature on file for this invoice.</p>';
+
+            const invoiceElement = document.createElement('div');
+            invoiceElement.className = 'invoice-in-modal';
+            invoiceElement.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p><strong>Invoice #:</strong> ${invoice.invoiceNumber || 'N/A'}</p>
+                        <p><strong>Date:</strong> ${invoice.invoiceDate || 'N/A'}</p>
+                        <p><strong>Total:</strong> ${formatCurrency(invoice.total)}</p>
+                    </div>
+                    <div class="w-1/2">
+                        ${signatureHTML}
+                    </div>
+                </div>
+            `;
+            invoicesContainer.appendChild(invoiceElement);
+        });
+    } else {
+        invoicesContainer.innerHTML = '<p>No invoices associated with this warranty.</p>';
+    }
+
+    modal.style.display = 'block';
+
+    // Ensure close buttons work
+    const closeButtons = modal.querySelectorAll('.close-button');
+    closeButtons.forEach(btn => {
+        btn.onclick = () => {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Ensure clicking outside closes the modal
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+}
 
     if (workerTodaysRouteEl) {
         workerTodaysRouteEl.addEventListener('click', (event) => {
@@ -1435,6 +1553,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target == addPartModal) closeAddPartModal();
         if (event.target == logPartUsageModal) closeLogPartUsageModal();
         if (event.target == addJobModal) addJobModal.style.display = 'none';
+        if (event.target == warrantyDetailModal) warrantyDetailModal.style.display = 'none';
     });
 
     // Logout Buttons
@@ -1605,40 +1724,66 @@ document.addEventListener('DOMContentLoaded', () => {
             sendAllInvoicesBtn.textContent = 'Sending...';
 
             try {
-                for (const invoice of pendingInvoices) {
-                    await db.runTransaction(async (transaction) => {
-                        const counterRef = db.collection('counters').doc('invoiceCounter');
-                        const counterDoc = await transaction.get(counterRef);
-
-                        let nextNumber = 1;
-                        if (counterDoc.exists && counterDoc.data().lastNumber) {
-                            nextNumber = counterDoc.data().lastNumber + 1;
-                        }
-                        const formattedInvoiceNumber = formatInvoiceNumber(nextNumber);
-                        invoice.invoiceNumber = formattedInvoiceNumber;
-                        
-                        invoice.pdfDataURL = generatePDF(invoice);
-                        if (!invoice.pdfDataURL) {
-                            showMessage(`Failed to generate PDF for ${invoice.customerName}. It will be saved without a PDF.`, 'warning');
-                        }
-
-                        const newInvoiceRef = db.collection('invoices').doc();
-                        transaction.set(newInvoiceRef, invoice);
-                        transaction.set(counterRef, { lastNumber: nextNumber }, { merge: true });
-                    });
-                }
-
-                showMessage('All invoices sent successfully!', 'success');
-                pendingInvoices = [];
-                showWorkerHomeScreen();
-
-            } catch (error) {
-                console.error("Error sending invoices:", error);
-                showMessage("Error sending invoices: " + error.message, "error");
-            } finally {
-                sendAllInvoicesBtn.disabled = false;
-                sendAllInvoicesBtn.textContent = 'Send All Invoices to Office';
+                // --- START: BUG FIX ---
+                // 1. Find the job details from the correct data source BEFORE any database writes.
+                // The job could be in the admin's list (allJobsData) or the worker's list (currentWorkerAssignedJobs).
+                const jobDataSource = allJobsData.length > 0 ? allJobsData : currentWorkerAssignedJobs;
+                const jobDetails = jobDataSource.find(j => j.id === currentJobIdForInvoicing);
+            // 2. Validate that the job details were found.
+            if (!jobDetails) {
+                throw new Error(`Could not find details for Job ID: ${currentJobIdForInvoicing}. Aborting.`);
             }
+            // 3. Make a copy of the invoices for the warranty record before clearing the main array.
+            const invoicesForWarranty = [...pendingInvoices];
+            // --- END: BUG FIX ---
+            for (const invoice of pendingInvoices) {
+                await db.runTransaction(async (transaction) => {
+                    const counterRef = db.collection('counters').doc('invoiceCounter');
+                    const counterDoc = await transaction.get(counterRef);
+                    let nextNumber = 1;
+                    if (counterDoc.exists && counterDoc.data().lastNumber) {
+                        nextNumber = counterDoc.data().lastNumber + 1;
+                    }
+                    const formattedInvoiceNumber = formatInvoiceNumber(nextNumber);
+                    invoice.invoiceNumber = formattedInvoiceNumber;
+                    
+                    invoice.pdfDataURL = generatePDF(invoice);
+                    if (!invoice.pdfDataURL) {
+                        showMessage(`Failed to generate PDF for ${invoice.customerName}. It will be saved without a PDF.`, 'warning');
+                    }
+                    const newInvoiceRef = db.collection('invoices').doc();
+                    transaction.set(newInvoiceRef, invoice);
+                    transaction.set(counterRef, { lastNumber: nextNumber }, { merge: true });
+                });
+            }
+            if (currentJobIdForInvoicing) {
+                // Use a batch write for atomicity
+                const batch = db.batch();
+                // Update Job Status
+                const jobRef = db.collection('jobs').doc(currentJobIdForInvoicing);
+                batch.update(jobRef, { status: 'Completed' });
+                // Create Warranty with the validated jobDetails
+                const warrantyRef = db.collection('warranties').doc();
+                const warrantyData = {
+                    job: jobDetails, // Use the validated job details object
+                    invoices: invoicesForWarranty, // Use the copied invoices
+                    completionDate: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                batch.set(warrantyRef, warrantyData);
+                await batch.commit();
+            }
+            
+            showMessage('All invoices sent and job finalized!', 'success');
+            pendingInvoices = []; // Now it's safe to clear the array
+            currentJobIdForInvoicing = null;
+            showWorkerHomeScreen();
+        } catch (error) {
+            console.error("Error sending invoices or finalizing job:", error);
+            showMessage("Error: " + error.message, "error");
+        } finally {
+            sendAllInvoicesBtn.disabled = false;
+            sendAllInvoicesBtn.textContent = 'Send All Invoices to Office';
+        }
         });
     }
 
@@ -1674,6 +1819,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         listenForTechnicians();
                         initializeInventory().then(listenForInventoryItems);
                         listenForDashboardData();
+                        listenForWarranties();
                         if (tripSheetDateInput.value) {
                            loadTripSheetsForDate(tripSheetDateInput.value);
                         }
@@ -1944,6 +2090,7 @@ function showConfirmationModal(title, message, onConfirm) {
 }
 
 async function showInvoiceScreen(jobId) {
+    currentJobIdForInvoicing = jobId;
     const job = allJobsData.find(j => j.id === jobId);
     if (!job) {
         console.error("Job not found for invoice creation:", jobId);
