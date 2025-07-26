@@ -1456,8 +1456,8 @@ function openWarrantyDetailModal(warranty) {
     const modal = document.getElementById('warrantyDetailModal');
     if (!modal) return;
 
-    // --- Populate all Job Details ---
-    const job = warranty.job || {}; // Use an empty object as a fallback
+    // --- Populate all Job Details (This part remains the same) ---
+    const job = warranty.job || {};
     document.getElementById('modalWarrantyCustomerName').textContent = job.customer || 'N/A';
     document.getElementById('modalWarrantyAddress').textContent = job.address || 'N/A';
     document.getElementById('modalWarrantyPhone').textContent = job.phone || 'N/A';
@@ -1466,40 +1466,68 @@ function openWarrantyDetailModal(warranty) {
     document.getElementById('modalWarrantyDispatchOrPoNumber').textContent = job.dispatchOrPoNumber || 'N/A';
     document.getElementById('modalWarrantyPlanType').textContent = job.planType || 'N/A';
     document.getElementById('modalWarrantyProvider').textContent = job.warrantyProvider || 'N/A';
-
-    // --- Robust Date Formatting ---
+    document.getElementById('modalWarrantyTypeOfEquipment').textContent = job.typeOfEquipment || 'N/A';
+    document.getElementById('modalWarrantyRecommendations').textContent = job.recommendations || 'N/A';
+    document.getElementById('modalWarrantyJobDescription').textContent = job.jobDescription || 'N/A';
+    
     let formattedDate = 'N/A';
     if (warranty.completionDate && typeof warranty.completionDate.toDate === 'function') {
-        // This handles Firebase Timestamps correctly
-        formattedDate = warranty.completionDate.toDate().toLocaleString(undefined, {
-            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        formattedDate = warranty.completionDate.toDate().toLocaleDateString(undefined, {
+            year: 'numeric', month: 'long', day: 'numeric'
         });
     }
     document.getElementById('modalWarrantyCompletionDate').textContent = formattedDate;
 
-    // --- Populate Invoices and Signatures ---
+    // --- Populate Invoices with Full Financial Details ---
     const invoicesContainer = document.getElementById('modalWarrantyInvoicesContainer');
     invoicesContainer.innerHTML = '';
 
     if (warranty.invoices && warranty.invoices.length > 0) {
-        warranty.invoices.forEach(invoice => {
+        warranty.invoices.forEach((invoice, index) => {
             const signatureHTML = invoice.signatureDataURL
                 ? `<img src="${invoice.signatureDataURL}" alt="Signature" class="signature-image-modal">`
-                : '<p class="text-sm text-slate-500 mt-2">No signature on file for this invoice.</p>';
+                : '<p class="text-sm text-slate-500 mt-2">No signature.</p>';
+
+            const itemsHTML = invoice.items.map(item => `
+                <tr>
+                    <td class="py-1 pr-2">${item.description}</td>
+                    <td class="py-1 pr-2 text-right">${item.quantity}</td>
+                    <td class="py-1 pr-2 text-right">${formatCurrency(item.price)}</td>
+                    <td class="py-1 text-right font-medium">${formatCurrency(item.total)}</td>
+                </tr>
+            `).join('');
+
+            const nonCoveredItemsHTML = invoice.nonCoveredItems
+                ? `<div class="mt-2 pt-2 border-t border-slate-200"><strong>Non-Covered Items:</strong><p class="text-sm whitespace-pre-wrap">${invoice.nonCoveredItems}</p></div>`
+                : '';
 
             const invoiceElement = document.createElement('div');
             invoiceElement.className = 'invoice-in-modal';
             invoiceElement.innerHTML = `
-                <div class="flex justify-between items-start">
+                <div class="flex justify-between items-center mb-2">
                     <div>
-                        <p><strong>Invoice #:</strong> ${invoice.invoiceNumber || 'N/A'}</p>
-                        <p><strong>Date:</strong> ${invoice.invoiceDate || 'N/A'}</p>
-                        <p><strong>Total:</strong> ${formatCurrency(invoice.total)}</p>
+                        <p class="font-bold text-slate-800">Invoice #: ${invoice.invoiceNumber || 'N/A'}</p>
+                        <p class="text-sm text-slate-600">Date: ${invoice.invoiceDate || 'N/A'}</p>
                     </div>
-                    <div class="w-1/2">
+                    <div class="text-right">
                         ${signatureHTML}
                     </div>
                 </div>
+                <h4 class="text-sm font-semibold mt-3 mb-1 text-slate-700">Items/Services:</h4>
+                <table class="w-full text-xs custom-table">
+                    <thead><tr><th>Desc.</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr></thead>
+                    <tbody>${itemsHTML}</tbody>
+                </table>
+                <div class="mt-3 flex justify-end">
+                    <div class="w-full max-w-xs space-y-1 text-sm">
+                        <div class="flex justify-between"><span>Subtotal:</span><span>${formatCurrency(invoice.subtotal)}</span></div>
+                        <div class="flex justify-between"><span>Labor:</span><span>${formatCurrency(invoice.labor)}</span></div>
+                        <div class="flex justify-between"><span>Service Call:</span><span>${formatCurrency(invoice.serviceCall)}</span></div>
+                        <div class="flex justify-between"><span>Sales Tax (${invoice.salesTaxRate}%):</span><span>${formatCurrency(invoice.salesTaxAmount)}</span></div>
+                        <div class="flex justify-between font-bold text-base border-t border-slate-300 mt-1 pt-1"><span>TOTAL:</span><span>${formatCurrency(invoice.total)}</span></div>
+                    </div>
+                </div>
+                ${nonCoveredItemsHTML}
             `;
             invoicesContainer.appendChild(invoiceElement);
         });
@@ -1509,19 +1537,12 @@ function openWarrantyDetailModal(warranty) {
 
     modal.style.display = 'block';
 
-    // Ensure close buttons work
     const closeButtons = modal.querySelectorAll('.close-button');
     closeButtons.forEach(btn => {
-        btn.onclick = () => {
-            modal.style.display = 'none';
-        }
+        btn.onclick = () => { modal.style.display = 'none'; }
     });
-
-    // Ensure clicking outside closes the modal
     window.onclick = (event) => {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
+        if (event.target == modal) { modal.style.display = 'none'; }
     }
 }
 
@@ -2222,10 +2243,6 @@ async function saveInvoiceData(invoiceDataToSave, isSilent = false, invoiceId = 
         if (!isSilent) showMessage('Error: Could not save to database.', 'error');
         return false;
     }
-}
-
-function formatInvoiceNumber(num) {
-    return `${String(num).padStart(5, '0')}`;
 }
 
 function formatInvoiceNumber(num) {
