@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Management - Safeway OS</title>
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&family=Inter%3Awght%40400%3B500%3B700%3B900&family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&family=Space+Grotesk%3Awght%40400%3B500%3B700" onload="this.rel='stylesheet'" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    
+    <style>
+        /* --- Embedded styles --- */
+        body {
+            font-family: 'Inter', "Noto Sans", sans-serif;
+            background-color: #f8fafc;
+        }
+        .nav-link.active {
+            color: #047857;
+            background-color: #d1fae5;
+        }
+        .stat-card-stitch {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.07);
+        }
+        .btn-secondary-stitch {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            border-radius: 0.375rem;
+            background-color: #f0fdf4;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            cursor: pointer;
+        }
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .custom-table th, .custom-table td {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+        }
+        .custom-table th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-weight: 600;
+        }
+        .custom-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1100; /* Ensure this is on top of the overlay */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 0; /* Removed padding for full control */
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 800px; /* Increased width for new layout */
+            overflow: hidden; /* Prevents content from spilling */
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 1.5rem;
+        }
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            text-align: right;
+        }
+        .close-button {
+            color: #94a3b8;
+            font-size: 1.75rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .invoice-in-modal {
+            background-color: #f9fafb;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .signature-image-modal {
+            border: 1px solid #d1d5db;
+            background-color: white;
+            max-width: 250px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9; /* Enforce a better shape */
+            object-fit: contain;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .provider-card {
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .provider-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 10px 0 rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.05);
+        }
+        .provider-card-content { text-align: center; }
+        .provider-card-title { font-size: 1.125rem; font-weight: 600; color: #1e293b; }
+        .provider-card-stats { margin-top: 0.75rem; font-size: 1.5rem; font-weight: 700; color: #059669; }
+        .provider-card-subtext { font-size: 0.875rem; color: #64748b; }
+
+        /* Fullscreen overlay styles */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f1f5f9; /* slate-100 */
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .fullscreen-overlay.is-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .fullscreen-close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            cursor: pointer;
+            color: #059669; /* green-600 */
+            transition: transform 0.2s ease-in-out;
+        }
+        .fullscreen-close-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Kanban-style claims processing UI */
+        .claims-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .claims-column {
+            background-color: #e2e8f0; /* slate-200 */
+            border-radius: 0.75rem;
+            padding: 1rem;
+        }
+        .claims-column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #cbd5e1; /* slate-300 */
+        }
+        .claims-column h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b; /* slate-800 */
+        }
+        .invoice-card-list {
+            margin-top: 1rem;
+            min-height: calc(100vh - 22rem); /* Ensure columns have a min height */
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        .invoice-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.3s ease-in-out;
+        }
+        .invoice-card.claimed {
+            background-color: #f0fdf4; /* green-50 */
+            border-left: 4px solid #22c55e; /* green-500 */
+        }
+
+        /* Date Filter Pop-up Styles */
+        .date-filter-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: 1px solid #cbd5e1; /* slate-300 */
+            background-color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #334155; /* slate-700 */
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .date-filter-btn:hover {
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .date-filter-btn.active {
+            background-color: #059669; /* green-600 */
+            color: white;
+            border-color: #059669;
+        }
+        .date-filter-popup {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            width: 20rem; /* 320px */
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0; /* slate-200 */
+            z-index: 50;
+        }
+        .date-filter-popup.is-visible {
+            display: block;
+        }
+
+        /* Pressable invoice card in modal */
+        .invoice-pressable-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #f1f5f9; /* slate-100 */
+            border-radius: 0.5rem;
+            cursor: pointer;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            transition: background-color 0.2s ease;
+        }
+        .invoice-pressable-card:hover {
+            background-color: #e2e8f0; /* slate-200 */
+        }
+        
+        /* Technician selection card */
+        .tech-selection-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e2e8f0;
+        }
+        .tech-selection-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            border-color: #059669;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <!-- Main Admin Layout Container -->
+    <div id="layoutContainer" class="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
+        <div class="flex h-full grow flex-col">
+            <!-- Header -->
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-10 py-4 shadow-sm sticky top-0 z-50">
+                <div class="flex items-center gap-3 text-slate-900">
+                    <div class="size-8 text-green-700"><svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor" fill-rule="evenodd"></path></svg></div>
+                    <h1 class="text-slate-900 text-xl font-bold leading-tight tracking-[-0.015em]">Safeway OS</h1>
+                </div>
+                <nav class="flex items-center gap-1 overflow-x-auto">
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#">...</a>
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors active" href="#" data-target="warranty"><span class="material-icons-outlined text-xl">receipt_long</span>Invoice</a>
+                    <a class="nav-link text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors" href="#">...</a>
+                </nav>
+                 <div class="flex items-center gap-4">
+                    <div id="userAvatar" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-white shadow-sm" style='background-image: url("https://placehold.co/40x40/059669/FFFFFF?text=S");'></div>
+                    <button id="logoutBtn" class="text-slate-700 hover:text-green-700 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-normal transition-colors"><span class="material-icons-outlined text-xl">logout</span>Logout</button>
+                </div>
+            </header>
+
+            <main class="flex flex-1 justify-center py-8 px-4 md:px-10 lg:px-16">
+                <div class="layout-content-container flex w-full max-w-7xl flex-col gap-6">
+                    <!-- Invoice Section -->
+                    <section id="invoice-management" class="content-section">
+                        <div class="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
+                            <div><h1 class="text-slate-900 text-3xl font-bold leading-tight tracking-tight">Invoice Management</h1><p class="text-slate-600 text-base font-normal leading-normal">Review financial performance and details for all completed jobs.</p></div>
+                             <!-- Filter Button & Pop-up Container -->
+                            <div class="relative">
+                                <button id="dateFilterToggle" class="date-filter-btn flex items-center gap-2">
+                                    <span class="material-icons-outlined text-xl">filter_list</span>
+                                    <span id="activeFilterDisplay">All Time</span>
+                                </button>
+                                <div id="dateFilterPopup" class="date-filter-popup">
+                                    <div class="p-4 space-y-4">
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-600 mb-2">Quick Ranges</p>
+                                            <div id="date-filter-presets" class="grid grid-cols-2 gap-2">
+                                                <button class="date-filter-btn text-xs" data-range="7">Last 7 Days</button>
+                                                <button class="date-filter-btn text-xs" data-range="30">Last 30 Days</button>
+                                                <button class="date-filter-btn text-xs" data-range="365">Last Year</button>
+                                                <button class="date-filter-btn text-xs active" data-range="all">All Time</button>
+                                            </div>
+                                        </div>
+                                        <hr/>
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-600 mb-2">Custom Range</p>
+                                            <div class="space-y-2">
+                                                <div class="flex items-center gap-2 text-sm"><label for="dateFrom" class="w-12">From:</label><input type="date" id="dateFrom" class="form-input text-sm p-1.5 rounded-md border-slate-300 w-full"></div>
+                                                <div class="flex items-center gap-2 text-sm"><label for="dateTo" class="w-12">To:</label><input type="date" id="dateTo" class="form-input text-sm p-1.5 rounded-md border-slate-300 w-full"></div>
+                                                <button id="applyDateRange" class="date-filter-btn bg-green-600 text-white w-full mt-2">Apply</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stat cards -->
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-6">
+                            <div class="stat-card-stitch"><div class="flex items-center justify-between"><p class="text-slate-700 text-base font-medium leading-normal">Total Invoices</p><span class="material-icons-outlined text-xl text-sky-500">receipt_long</span></div><p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="statsTotalInvoices">0</p></div>
+                            <div class="stat-card-stitch"><div class="flex items-center justify-between"><p class="text-slate-700 text-base font-medium leading-normal">Unclaimed Invoices</p><span class="material-icons-outlined text-xl text-amber-500">hourglass_top</span></div><p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="statsUnclaimedInvoices">0</p></div>
+                            <div class="stat-card-stitch"><div class="flex items-center justify-between"><p class="text-slate-700 text-base font-medium leading-normal">Claimed Invoices</p><span class="material-icons-outlined text-xl text-green-500">task_alt</span></div><p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="statsClaimedInvoices">0</p></div>
+                            <div class="stat-card-stitch"><div class="flex items-center justify-between"><p class="text-slate-700 text-base font-medium leading-normal">Value of Claimed</p><span class="material-icons-outlined text-xl text-purple-500">paid</span></div><p class="text-slate-900 text-4xl font-bold leading-tight tracking-tight" id="statsClaimedValue">$0.00</p></div>
+                        </div>
+
+                        <!-- Interactive Warranty Provider Cards -->
+                        <div id="provider-cards-container" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                            <div class="stat-card-stitch provider-card" data-provider="First American"><div class="provider-card-content"><h3 class="provider-card-title">First American</h3><p id="firstAmericanStats" class="provider-card-stats">0</p><p class="provider-card-subtext">Invoices</p></div></div>
+                            <div class="stat-card-stitch provider-card" data-provider="Home Guard"><div class="provider-card-content"><h3 class="provider-card-title">Home Guard</h3><p id="homeGuardStats" class="provider-card-stats">0</p><p class="provider-card-subtext">Invoices</p></div></div>
+                            <div class="stat-card-stitch provider-card" data-provider="Others"><div class="provider-card-content"><h3 class="provider-card-title">Others</h3><p id="othersStats" class="provider-card-stats">0</p><p class="provider-card-subtext">Invoices</p></div></div>
+                        </div>
+
+                        <!-- "Completed Jobs & Invoices" section -->
+                        <div class="mt-6 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <h3 id="invoiceTableTitle" class="text-slate-800 text-lg font-semibold leading-normal">Latest 5 Completed Jobs</h3>
+                                <button id="viewAllInvoicesBtn" class="font-semibold text-sm text-green-600 hover:text-green-700 transition-colors" style="display: none;">View All</button>
+                            </div>
+                            <div class="overflow-x-auto"><table id="warrantyTable" class="custom-table"><thead><tr><th>Customer</th><th>Address</th><th>Completion Date</th><th>Technician</th><th>Actions</th></tr></thead><tbody id="warrantyTableBody"><tr><td colspan="5" class="text-center text-slate-500 py-4">Loading invoices...</td></tr></tbody></table></div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Job Detail Modal -->
+    <div id="warrantyDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalJobTitle">Invoice & Job Details</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Customer Info Card -->
+                    <div class="bg-slate-50 p-4 rounded-lg border">
+                        <h3 class="font-semibold text-slate-800 mb-3 text-base border-b pb-2">Customer Information</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center"><span class="material-icons-outlined text-slate-500 mr-3">person</span><span id="modalWarrantyCustomerName">N/A</span></div>
+                            <div class="flex items-center"><span class="material-icons-outlined text-slate-500 mr-3">home</span><span id="modalWarrantyAddress">N/A</span></div>
+                            <div class="flex items-center"><span class="material-icons-outlined text-slate-500 mr-3">phone</span><span id="modalWarrantyPhone">N/A</span></div>
+                        </div>
+                    </div>
+                    <!-- Job Details Card -->
+                    <div class="bg-slate-50 p-4 rounded-lg border">
+                        <h3 class="font-semibold text-slate-800 mb-3 text-base border-b pb-2">Job Details</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center"><span class="material-icons-outlined text-slate-500 mr-3">event</span><span id="modalWarrantyCompletionDate">N/A</span></div>
+                            <div class="flex items-center"><span class="material-icons-outlined text-slate-500 mr-3">badge</span><span id="modalWarrantyTechnician">N/A</span></div>
+                            <div class="flex items-center"><span class="material-icons-outlined text-slate-500 mr-3">confirmation_number</span><span id="modalWarrantyDispatchOrPoNumber">N/A</span></div>
+                        </div>
+                    </div>
+                    <!-- Warranty & Plan Card -->
+                    <div class="bg-slate-50 p-4 rounded-lg border md:col-span-2">
+                         <h3 class="font-semibold text-slate-800 mb-3 text-base border-b pb-2">Warranty & Plan</h3>
+                         <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>Provider:</strong> <span id="modalWarrantyProvider">N/A</span></div>
+                            <div><strong>Plan Type:</strong> <span id="modalWarrantyPlanType">N/A</span></div>
+                         </div>
+                    </div>
+                </div>
+                <hr class="my-6">
+                <h3 class="text-lg font-semibold mb-2">Associated Invoices</h3>
+                <div id="modalWarrantyInvoicesContainer" class="space-y-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary-stitch close-button">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fullscreen Claims Processing Workspace -->
+    <div id="providerInvoiceListOverlay" class="fullscreen-overlay">
+        <div id="fullscreenCloseBtn" class="fullscreen-close-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </div>
+        <div class="w-full max-w-6xl mx-auto">
+            <h2 id="providerModalTitle" class="text-3xl font-bold text-slate-800">Provider Claims</h2>
+            <div class="mt-4 p-4 bg-white rounded-lg shadow-md">
+                <label for="claimsEmailInput" class="block text-sm font-medium text-gray-700">Claims Submission Email</label>
+                <input type="email" id="claimsEmailInput" class="mt-1 block w-full md:w-1/3 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" placeholder="claims@example.com">
+            </div>
+            <div id="claimsWorkspace" class="claims-workspace">
+                <div class="claims-column">
+                    <div class="claims-column-header">
+                        <h3>Unclaimed Invoices</h3>
+                        <button id="processAllBtn" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded-md hidden">Process All</button>
+                    </div>
+                    <div id="unclaimedInvoicesList" class="invoice-card-list"></div>
+                </div>
+                <div class="claims-column">
+                    <div class="claims-column-header"><h3>Claimed Invoices</h3></div>
+                    <div id="claimedInvoicesList" class="invoice-card-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Invoice Detail Overlay -->
+    <div id="invoiceDetailOverlay" class="fullscreen-overlay">
+        <div id="invoiceDetailCloseBtn" class="fullscreen-close-btn">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </div>
+        <div id="invoiceDetailContent" class="w-full max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+            <!-- Content will be injected here by JavaScript -->
+        </div>
+    </div>
+    
+    <!-- Fullscreen "All Jobs" Overlay -->
+    <div id="allJobsOverlay" class="fullscreen-overlay">
+        <div id="allJobsCloseBtn" class="fullscreen-close-btn">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </div>
+        <div class="w-full max-w-6xl mx-auto">
+            <h2 id="allJobsTitle" class="text-3xl font-bold text-slate-800">All Completed Jobs</h2>
+            <div class="mt-4 mb-6">
+                <input type="text" id="jobsSearchInput" placeholder="Search by customer, address, or PO..." class="p-2 border border-slate-300 rounded-md w-full md:w-1/2">
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+                <table id="allJobsTable" class="custom-table">
+                    <thead><tr><th>Customer</th><th>Address</th><th>Completion Date</th><th>Technician</th><th>Actions</th></tr></thead>
+                    <tbody id="allJobsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Technician Selection Overlay -->
+    <div id="technicianSelectionOverlay" class="fullscreen-overlay">
+        <div id="technicianSelectionCloseBtn" class="fullscreen-close-btn">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </div>
+        <div class="w-full max-w-4xl mx-auto">
+            <h2 class="text-3xl font-bold text-slate-800 text-center">View Invoices By Technician</h2>
+            <div id="technicianSelectionCards" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Technician cards will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- Embedded JavaScript ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNjGhWVguIWBAHyyLfTapsF_5Bp6ztRG0",
+            authDomain: "safewayos2.firebaseapp.com",
+            projectId: "safewayos2",
+            storageBucket: "safewayos2.appspot.com",
+            messagingSenderId: "216681158749",
+            appId: "1:216681158749:web:35de32f542ad71fa7295b4"
+        };
+
+        let allWarrantiesData = [], allTechniciansData = [], db, auth, currentProvider = null, currentFilteredData = [];
+
+        const warrantyTableBody = document.getElementById('warrantyTableBody');
+        const warrantyDetailModal = document.getElementById('warrantyDetailModal');
+        const providerInvoiceListOverlay = document.getElementById('providerInvoiceListOverlay');
+        const invoiceDetailOverlay = document.getElementById('invoiceDetailOverlay');
+        const allJobsOverlay = document.getElementById('allJobsOverlay');
+        const technicianSelectionOverlay = document.getElementById('technicianSelectionOverlay');
+
+        function formatCurrency(amount) { return `$${parseFloat(amount || 0).toFixed(2)}`; }
+
+        function updateDashboard(data) {
+            currentFilteredData = data; // Store current filtered data
+            renderInvoiceStats(data);
+            renderProviderCardCounts(data);
+            renderWarranties(data);
+        }
+
+        function renderInvoiceStats(warranties) {
+            const statsTotalInvoices = document.getElementById('statsTotalInvoices');
+            const statsUnclaimedInvoices = document.getElementById('statsUnclaimedInvoices');
+            const statsClaimedInvoices = document.getElementById('statsClaimedInvoices');
+            const statsClaimedValue = document.getElementById('statsClaimedValue');
+            let total = 0, unclaimed = 0, claimed = 0, value = 0;
+            if (warranties) warranties.forEach(w => w.invoices?.forEach(inv => {
+                total++;
+                inv.status === 'paid' ? (claimed++, value += inv.total || 0) : unclaimed++;
+            }));
+            if (statsTotalInvoices) statsTotalInvoices.textContent = total;
+            if (statsUnclaimedInvoices) statsUnclaimedInvoices.textContent = unclaimed;
+            if (statsClaimedInvoices) statsClaimedInvoices.textContent = claimed;
+            if (statsClaimedValue) statsClaimedValue.textContent = formatCurrency(value);
+        }
+
+        function renderProviderCardCounts(warranties) {
+            const providers = { firstAmerican: { count: 0, value: 0 }, homeGuard: { count: 0, value: 0 }, others: { count: 0, value: 0 } };
+            warranties.forEach(w => {
+                const pName = w.job?.warrantyProvider?.toLowerCase() || 'other';
+                const total = w.invoices?.reduce((s, i) => s + (i.total || 0), 0) || 0;
+                const count = w.invoices?.length || 0;
+                if (pName.includes('first american')) { providers.firstAmerican.count += count; providers.firstAmerican.value += total; }
+                else if (pName.includes('home guard')) { providers.homeGuard.count += count; providers.homeGuard.value += total; }
+                else { providers.others.count += count; providers.others.value += total; }
+            });
+            document.getElementById('firstAmericanStats').innerHTML = `${providers.firstAmerican.count} <span class="provider-card-subtext">${formatCurrency(providers.firstAmerican.value)}</span>`;
+            document.getElementById('homeGuardStats').innerHTML = `${providers.homeGuard.count} <span class="provider-card-subtext">${formatCurrency(providers.homeGuard.value)}</span>`;
+            document.getElementById('othersStats').innerHTML = `${providers.others.count} <span class="provider-card-subtext">${formatCurrency(providers.others.value)}</span>`;
+        }
+
+        function renderWarranties(warranties) {
+            if (!warrantyTableBody) return;
+            warrantyTableBody.innerHTML = '';
+            const tableTitle = document.getElementById('invoiceTableTitle');
+            const viewAllBtn = document.getElementById('viewAllInvoicesBtn');
+            if (!warranties || warranties.length === 0) {
+                warrantyTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-500 py-4">No completed jobs found for the selected period.</td></tr>`;
+                if(viewAllBtn) viewAllBtn.style.display = 'none';
+                return;
+            }
+            const sortedWarranties = [...warranties].sort((a, b) => (b.completionDate?.toDate() || 0) - (a.completionDate?.toDate() || 0));
+            const warrantiesToRender = sortedWarranties.slice(0, 5);
+            
+            if (viewAllBtn) {
+                viewAllBtn.style.display = 'inline';
+            }
+
+            if (tableTitle) tableTitle.textContent = 'Latest 5 Completed Jobs';
+            warrantyTableBody.innerHTML = warrantiesToRender.map(w => `<tr><td class="font-medium text-slate-800">${w.job?.customer||'N/A'}</td><td>${w.job?.address||'N/A'}</td><td>${w.completionDate?.toDate().toLocaleDateString()||'N/A'}</td><td>${w.job?.assignedTechnicianName||'N/A'}</td><td><button class="btn-secondary-stitch view-warranty-btn" data-id="${w.id}">View Details</button></td></tr>`).join('');
+        }
+        
+        function openProviderClaimsWorkspace(providerName, warranties) {
+            currentProvider = providerName;
+            const modalTitle = document.getElementById('providerModalTitle');
+            const unclaimedList = document.getElementById('unclaimedInvoicesList');
+            const claimedList = document.getElementById('claimedInvoicesList');
+            const processAllBtn = document.getElementById('processAllBtn');
+            if (!providerInvoiceListOverlay || !modalTitle || !unclaimedList || !claimedList) return;
+
+            modalTitle.textContent = `${providerName} Claims`;
+            unclaimedList.innerHTML = '';
+            claimedList.innerHTML = '';
+            
+            const providerKey = providerName.toLowerCase();
+            const filteredWarranties = warranties.filter(w => {
+                const pName = w.job?.warrantyProvider?.toLowerCase() || 'other';
+                if (providerKey === 'first american') return pName.includes('first american');
+                if (providerKey === 'home guard') return pName.includes('home guard');
+                if (providerKey === 'others') return !pName.includes('first american') && !pName.includes('home guard');
+                return false;
+            });
+
+            let unclaimedCount = 0;
+            let claimedCount = 0;
+
+            filteredWarranties.forEach(w => {
+                w.invoices?.forEach(inv => {
+                    const card = document.createElement('div');
+                    card.className = 'invoice-card';
+                    card.dataset.invoiceNumber = inv.invoiceNumber;
+                    card.dataset.warrantyId = w.id;
+                    const isClaimed = inv.status === 'paid';
+                    card.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-semibold text-slate-800">${w.job?.customer || 'N/A'}</p><p class="text-xs text-slate-500">#${inv.invoiceNumber || 'N/A'} &bull; ${inv.invoiceDate || 'N/A'}</p></div><p class="font-bold text-lg text-green-600">${formatCurrency(inv.total)}</p></div><div class="mt-3 flex justify-end items-center gap-2"><button class="btn-secondary-stitch text-xs view-warranty-btn" data-id="${w.id}">View Job</button>${!isClaimed ? `<button class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-md process-claim-btn">Process Claim</button>` : ''}</div>`;
+                    if(isClaimed) { card.classList.add('claimed'); claimedList.appendChild(card); claimedCount++; } 
+                    else { unclaimedList.appendChild(card); unclaimedCount++; }
+                });
+            });
+
+            if (unclaimedCount === 0) { unclaimedList.innerHTML = '<p class="text-center text-sm text-slate-500 p-4">No unclaimed invoices.</p>'; processAllBtn.classList.add('hidden'); } 
+            else { processAllBtn.classList.remove('hidden'); }
+            if (claimedCount === 0) claimedList.innerHTML = '<p class="text-center text-sm text-slate-500 p-4">No claimed invoices.</p>';
+            
+            providerInvoiceListOverlay.classList.add('is-visible');
+        }
+
+        function openWarrantyDetailModal(warranty) {
+            if (!warrantyDetailModal) return;
+            const job = warranty.job || {};
+            document.getElementById('modalJobTitle').textContent = `Details for Job: ${job.dispatchOrPoNumber || 'N/A'}`;
+            document.getElementById('modalWarrantyCustomerName').textContent = job.customer || 'N/A';
+            document.getElementById('modalWarrantyAddress').textContent = job.address || 'N/A';
+            document.getElementById('modalWarrantyPhone').textContent = job.phone || 'N/A';
+            document.getElementById('modalWarrantyTechnician').textContent = job.assignedTechnicianName || 'N/A';
+            document.getElementById('modalWarrantyDispatchOrPoNumber').textContent = job.dispatchOrPoNumber || 'N/A';
+            document.getElementById('modalWarrantyPlanType').textContent = job.planType || 'N/A';
+            document.getElementById('modalWarrantyProvider').textContent = job.warrantyProvider || 'N/A';
+            document.getElementById('modalWarrantyCompletionDate').textContent = warranty.completionDate?.toDate().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) || 'N/A';
+            
+            const invoicesContainer = document.getElementById('modalWarrantyInvoicesContainer');
+            invoicesContainer.innerHTML = '';
+            if (warranty.invoices && warranty.invoices.length > 0) {
+                warranty.invoices.forEach((invoice) => {
+                    const invoiceElement = document.createElement('div');
+                    invoiceElement.className = 'invoice-pressable-card';
+                    invoiceElement.dataset.warrantyId = warranty.id;
+                    invoiceElement.dataset.invoiceNumber = invoice.invoiceNumber;
+                    
+                    invoiceElement.innerHTML = `
+                        <div class="font-semibold text-slate-700">Invoice #${invoice.invoiceNumber || 'N/A'}</div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-green-700">${formatCurrency(invoice.total)}</span>
+                            <span class="material-icons-outlined text-slate-500">chevron_right</span>
+                        </div>
+                    `;
+                    invoicesContainer.appendChild(invoiceElement);
+                });
+            } else {
+                invoicesContainer.innerHTML = '<p class="p-4 text-center text-slate-500">No invoices associated with this job.</p>';
+            }
+            warrantyDetailModal.style.display = 'block';
+        }
+
+        function openInvoiceDetailOverlay(warranty, invoice) {
+            const content = document.getElementById('invoiceDetailContent');
+            const job = warranty.job || {};
+            
+            const signatureHTML = invoice.signatureDataURL ? `<img src="${invoice.signatureDataURL}" alt="Signature" class="signature-image-modal">` : '<p class="text-sm text-slate-500 mt-2">No signature provided.</p>';
+            const itemsHTML = invoice.items.map(item => `<tr><td class="py-1 pr-2">${item.description}</td><td class="py-1 pr-2 text-right">${item.quantity}</td><td class="py-1 pr-2 text-right">${formatCurrency(item.price)}</td><td class="py-1 text-right font-medium">${formatCurrency(item.total)}</td></tr>`).join('');
+            const nonCoveredItemsHTML = invoice.nonCoveredItems ? `<div class="mt-2 pt-2 border-t border-slate-200"><strong>Non-Covered Items:</strong><p class="text-sm whitespace-pre-wrap">${invoice.nonCoveredItems}</p></div>` : '';
+            
+            content.innerHTML = `
+                <h2 class="text-2xl font-bold text-slate-800">Invoice #${invoice.invoiceNumber}</h2>
+                <p class="text-sm text-slate-500 mb-6">Date: ${invoice.invoiceDate || 'N/A'}</p>
+                
+                <h3 class="text-lg font-semibold mt-4 mb-2 text-slate-700">Items/Services:</h3>
+                <table class="w-full text-sm custom-table"><thead><tr><th>Desc.</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr></thead><tbody>${itemsHTML}</tbody></table>
+                <div class="mt-4 flex justify-end"><div class="w-full max-w-xs space-y-1 text-sm"><div class="flex justify-between"><span>Subtotal:</span><span>${formatCurrency(invoice.subtotal)}</span></div><div class="flex justify-between"><span>Labor:</span><span>${formatCurrency(invoice.labor)}</span></div><div class="flex justify-between"><span>Service Call:</span><span>${formatCurrency(invoice.serviceCall)}</span></div><div class="flex justify-between"><span>Sales Tax (${invoice.salesTaxRate}%):</span><span>${formatCurrency(invoice.salesTaxAmount)}</span></div><div class="flex justify-between font-bold text-base border-t border-slate-300 mt-1 pt-1"><span>TOTAL:</span><span>${formatCurrency(invoice.total)}</span></div></div></div>
+                ${nonCoveredItemsHTML}
+                
+                <div class="bg-slate-50 p-4 rounded-lg border mt-6">
+                    <h3 class="font-semibold text-slate-800 mb-2 text-base">Job Description & Recommendations</h3>
+                    <p class="text-sm text-slate-600 whitespace-pre-wrap"><strong>Issue:</strong> ${job.issue || 'N/A'}</p>
+                    <p class="text-sm text-slate-600 mt-2 whitespace-pre-wrap"><strong>Work Performed:</strong> ${job.jobDescription || 'N/A'}</p>
+                    <p class="text-sm text-slate-600 mt-2 whitespace-pre-wrap"><strong>Recommendations:</strong> ${job.recommendations || 'N/A'}</p>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-200">
+                    <h4 class="text-base font-semibold text-slate-700">Customer Signature</h4>
+                    <div class="mt-2">
+                        ${signatureHTML}
+                        <p class="text-sm text-slate-600 mt-1"><strong>Signed By:</strong> ${invoice.signedBy || 'N/A'}</p>
+                    </div>
+                </div>
+            `;
+            invoiceDetailOverlay.classList.add('is-visible');
+        }
+
+        function openAllJobsOverlay(warranties, technicianName = 'All Technicians') {
+            const tableBody = document.getElementById('allJobsTableBody');
+            const title = document.getElementById('allJobsTitle');
+            if (!tableBody || !allJobsOverlay) return;
+
+            const filteredWarranties = technicianName === 'All Technicians'
+                ? warranties
+                : warranties.filter(w => w.job?.assignedTechnicianName === technicianName);
+
+            const sortedWarranties = [...filteredWarranties].sort((a, b) => (b.completionDate?.toDate() || 0) - (a.completionDate?.toDate() || 0));
+            title.textContent = `${technicianName} - Completed Jobs (${sortedWarranties.length})`;
+            tableBody.innerHTML = sortedWarranties.map(w => {
+                const completionDate = w.completionDate?.toDate().toLocaleDateString() || 'N/A';
+                return `<tr><td class="font-medium text-slate-800">${w.job?.customer||'N/A'}</td><td>${w.job?.address||'N/A'}</td><td>${completionDate}</td><td>${w.job?.assignedTechnicianName||'N/A'}</td><td><button class="btn-secondary-stitch view-warranty-btn" data-id="${w.id}">View Details</button></td></tr>`;
+            }).join('');
+            
+            allJobsOverlay.classList.add('is-visible');
+        }
+
+        function openTechnicianSelectionOverlay() {
+            const container = document.getElementById('technicianSelectionCards');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="tech-selection-card" data-technician="All Technicians">
+                    <span class="material-icons-outlined text-5xl text-green-600 mb-2">groups</span>
+                    <h3 class="text-xl font-bold text-slate-800">All Technicians</h3>
+                </div>
+            `;
+
+            allTechniciansData.forEach(tech => {
+                const card = document.createElement('div');
+                card.className = 'tech-selection-card';
+                card.dataset.technician = tech.name;
+                card.innerHTML = `
+                    <span class="material-icons-outlined text-5xl text-green-600 mb-2">person</span>
+                    <h3 class="text-xl font-bold text-slate-800">${tech.name}</h3>
+                `;
+                container.appendChild(card);
+            });
+
+            technicianSelectionOverlay.classList.add('is-visible');
+        }
+
+        function closeModal(modal) { if (modal) modal.style.display = 'none'; }
+        function closeOverlay(overlay) { if(overlay) overlay.classList.remove('is-visible'); }
+
+        function listenForWarranties() {
+            const warrantiesQuery = firebase.firestore().collection("warranties").orderBy("completionDate", "desc");
+            warrantiesQuery.onSnapshot((snapshot) => {
+                allWarrantiesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateDashboard(allWarrantiesData);
+            }, (error) => {
+                console.error("Error listening for invoice data:", error);
+                if (warrantyTableBody) warrantyTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Error loading data.</td></tr>`;
+            });
+        }
+        
+        function listenForAllTechnicians() {
+            const techQuery = firebase.firestore().collection("technicians");
+            techQuery.onSnapshot((snapshot) => {
+                allTechniciansData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }, (error) => console.error("Error listening for technicians:", error));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        listenForWarranties();
+                        listenForAllTechnicians(); // Fetch all technicians
+                        document.getElementById('userAvatar').style.backgroundImage = `url("https://placehold.co/40x40/059669/FFFFFF?text=${user.email.charAt(0).toUpperCase()}")`;
+                    } else {
+                        warrantyTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-500 py-4">Please sign in to view invoice data.</td></tr>`;
+                    }
+                });
+            } catch (error) { console.error("Firebase initialization failed:", error); }
+
+            // --- EVENT LISTENERS ---
+            
+            document.body.addEventListener('click', function(event) {
+                const viewBtn = event.target.closest('.view-warranty-btn');
+                if (viewBtn) {
+                    const warrantyId = viewBtn.dataset.id;
+                    const warrantyData = allWarrantiesData.find(w => w.id === warrantyId);
+                    if (warrantyData) openWarrantyDetailModal(warrantyData);
+                }
+            });
+            
+            document.getElementById('modalWarrantyInvoicesContainer').addEventListener('click', (event) => {
+                event.preventDefault(); 
+                const card = event.target.closest('.invoice-pressable-card');
+                if (card) {
+                    const warrantyId = card.dataset.warrantyId;
+                    const invoiceNumber = card.dataset.invoiceNumber;
+                    const warranty = allWarrantiesData.find(w => w.id === warrantyId);
+                    const invoice = warranty?.invoices.find(i => i.invoiceNumber === invoiceNumber);
+                    if (warranty && invoice) {
+                        closeModal(warrantyDetailModal); // Close the job modal first
+                        openInvoiceDetailOverlay(warranty, invoice);
+                    }
+                }
+            });
+
+            document.getElementById('provider-cards-container').addEventListener('click', (event) => {
+                const card = event.target.closest('.provider-card');
+                if (card) {
+                    const providerName = card.dataset.provider;
+                    openProviderClaimsWorkspace(providerName, allWarrantiesData);
+                }
+            });
+
+            document.getElementById('viewAllInvoicesBtn')?.addEventListener('click', () => {
+                openTechnicianSelectionOverlay();
+            });
+            
+            document.getElementById('technicianSelectionCards').addEventListener('click', (event) => {
+                const card = event.target.closest('.tech-selection-card');
+                if (card) {
+                    const techName = card.dataset.technician;
+                    closeOverlay(technicianSelectionOverlay);
+                    openAllJobsOverlay(currentFilteredData, techName);
+                }
+            });
+            
+            warrantyDetailModal?.querySelectorAll('.close-button').forEach(btn => btn.addEventListener('click', () => closeModal(warrantyDetailModal)));
+            window.addEventListener('click', (event) => { if (event.target == warrantyDetailModal) closeModal(warrantyDetailModal); });
+            document.getElementById('fullscreenCloseBtn')?.addEventListener('click', () => closeOverlay(providerInvoiceListOverlay));
+            document.getElementById('invoiceDetailCloseBtn')?.addEventListener('click', () => closeOverlay(invoiceDetailOverlay));
+            document.getElementById('allJobsCloseBtn')?.addEventListener('click', () => closeOverlay(allJobsOverlay));
+            document.getElementById('technicianSelectionCloseBtn')?.addEventListener('click', () => closeOverlay(technicianSelectionOverlay));
+            
+            document.getElementById('logoutBtn')?.addEventListener('click', () => auth.signOut().catch(err => console.error("Logout error", err)));
+
+            // --- DATE FILTER LOGIC ---
+            const dateFilterToggle = document.getElementById('dateFilterToggle');
+            const dateFilterPopup = document.getElementById('dateFilterPopup');
+            
+            dateFilterToggle.addEventListener('click', () => {
+                dateFilterPopup.classList.toggle('is-visible');
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!dateFilterToggle.contains(event.target) && !dateFilterPopup.contains(event.target)) {
+                    dateFilterPopup.classList.remove('is-visible');
+                }
+            });
+
+            const presetsContainer = document.getElementById('date-filter-presets');
+            presetsContainer.addEventListener('click', (event) => {
+                if (event.target.tagName === 'BUTTON') {
+                    presetsContainer.querySelectorAll('.date-filter-btn').forEach(btn => btn.classList.remove('active'));
+                    event.target.classList.add('active');
+                    document.getElementById('activeFilterDisplay').textContent = event.target.textContent;
+                    dateFilterPopup.classList.remove('is-visible');
+
+                    const range = event.target.dataset.range;
+                    if (range === 'all') {
+                        updateDashboard(allWarrantiesData);
+                        return;
+                    }
+
+                    const days = parseInt(range, 10);
+                    const endDate = new Date();
+                    const startDate = new Date();
+                    startDate.setDate(endDate.getDate() - days);
+                    
+                    const filteredData = allWarrantiesData.filter(w => {
+                        const completionDate = w.completionDate?.toDate();
+                        return completionDate && completionDate >= startDate && completionDate <= endDate;
+                    });
+                    updateDashboard(filteredData);
+                }
+            });
+
+            document.getElementById('applyDateRange').addEventListener('click', () => {
+                presetsContainer.querySelectorAll('.date-filter-btn').forEach(btn => btn.classList.remove('active'));
+                const fromDateStr = document.getElementById('dateFrom').value;
+                const toDateStr = document.getElementById('dateTo').value;
+
+                if (!fromDateStr || !toDateStr) {
+                    alert("Please select both a 'From' and 'To' date.");
+                    return;
+                }
+                
+                document.getElementById('activeFilterDisplay').textContent = `Custom Range`;
+                dateFilterPopup.classList.remove('is-visible');
+
+                const startDate = new Date(fromDateStr);
+                const endDate = new Date(toDateStr);
+                endDate.setHours(23, 59, 59, 999);
+
+                const filteredData = allWarrantiesData.filter(w => {
+                    const completionDate = w.completionDate?.toDate();
+                    return completionDate && completionDate >= startDate && completionDate <= endDate;
+                });
+                updateDashboard(filteredData);
+            });
+
+            // --- CLAIMS PROCESSING LOGIC ---
+            document.getElementById('claimsWorkspace').addEventListener('click', async (event) => {
+                const processBtn = event.target.closest('.process-claim-btn');
+                if (processBtn) {
+                    const card = processBtn.closest('.invoice-card');
+                    const warrantyId = card.dataset.warrantyId;
+                    const invoiceNumber = card.dataset.invoiceNumber;
+                    const claimsEmail = document.getElementById('claimsEmailInput').value;
+
+                    if (!claimsEmail || !claimsEmail.includes('@')) {
+                        alert('Please enter a valid email address for claims submission.');
+                        return;
+                    }
+
+                    if (confirm(`This will mark invoice #${invoiceNumber} as claimed and simulate sending it to ${claimsEmail}. Proceed?`)) {
+                        processBtn.textContent = 'Processing...';
+                        processBtn.disabled = true;
+
+                        const warrantyToUpdate = allWarrantiesData.find(w => w.id === warrantyId);
+                        if (warrantyToUpdate && warrantyToUpdate.invoices) {
+                            const invoiceIndex = warrantyToUpdate.invoices.findIndex(inv => inv.invoiceNumber === invoiceNumber);
+                            if (invoiceIndex !== -1) {
+                                warrantyToUpdate.invoices[invoiceIndex].status = 'paid';
+                                const warrantyRef = db.collection('warranties').doc(warrantyId);
+                                try {
+                                    await warrantyRef.update({ invoices: warrantyToUpdate.invoices });
+                                } catch (error) {
+                                    console.error("Error updating invoice status:", error);
+                                    alert("Failed to update the claim status. Please try again.");
+                                    warrantyToUpdate.invoices[invoiceIndex].status = 'pending'; 
+                                    processBtn.textContent = 'Process Claim';
+                                    processBtn.disabled = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('processAllBtn').addEventListener('click', async () => {
+                const processAllBtn = document.getElementById('processAllBtn');
+                const claimsEmail = document.getElementById('claimsEmailInput').value;
+
+                if (!claimsEmail || !claimsEmail.includes('@')) {
+                    alert('Please enter a valid email address for claims submission.');
+                    return;
+                }
+                
+                const providerKey = currentProvider.toLowerCase();
+                const unclaimedWarranties = allWarrantiesData
+                    .filter(w => {
+                        const pName = w.job?.warrantyProvider?.toLowerCase() || 'other';
+                        if (providerKey === 'first american') return pName.includes('first american');
+                        if (providerKey === 'home guard') return pName.includes('home guard');
+                        if (providerKey === 'others') return !pName.includes('first american') && !pName.includes('home guard');
+                        return false;
+                    })
+                    .filter(w => w.invoices?.some(inv => inv.status !== 'paid'));
+                
+                const unclaimedCount = unclaimedWarranties.reduce((sum, w) => sum + w.invoices.filter(i => i.status !== 'paid').length, 0);
+
+                if (unclaimedCount === 0) {
+                    alert('No unclaimed invoices to process.');
+                    return;
+                }
+
+                if (confirm(`This will process ${unclaimedCount} unclaimed invoices for ${currentProvider}. Proceed?`)) {
+                    processAllBtn.textContent = 'Processing...';
+                    processAllBtn.disabled = true;
+
+                    const batch = db.batch();
+                    unclaimedWarranties.forEach(warrantyDoc => {
+                        const updatedInvoices = warrantyDoc.invoices.map(inv => inv.status !== 'paid' ? { ...inv, status: 'paid' } : inv);
+                        const warrantyRef = db.collection('warranties').doc(warrantyDoc.id);
+                        batch.update(warrantyRef, { invoices: updatedInvoices });
+                    });
+
+                    try {
+                        await batch.commit();
+                        console.log(`Successfully processed ${unclaimedCount} invoices.`);
+                    } catch (error) {
+                        console.error("Error processing all claims:", error);
+                        alert("An error occurred while processing claims. Please try again.");
+                    } finally {
+                        processAllBtn.textContent = 'Process All';
+                        processAllBtn.disabled = false;
+                    }
+                }
+            });
+            
+            // Search logic for All Jobs overlay
+            document.getElementById('jobsSearchInput').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.getElementById('allJobsTableBody').getElementsByTagName('tr');
+                Array.from(rows).forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    row.style.display = rowText.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
